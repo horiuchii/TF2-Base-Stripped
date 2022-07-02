@@ -2061,7 +2061,6 @@ bool CTFPlayer::CanDisguise( void )
 
 	if ( HasItem() && GetItem()->GetItemID() == TF_ITEM_CAPTURE_FLAG )
 	{
-		HintMessage( HINT_CANNOT_DISGUISE_WITH_FLAG );
 		return false;
 	}
 

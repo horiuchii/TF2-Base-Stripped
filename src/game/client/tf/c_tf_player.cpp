@@ -2521,19 +2521,6 @@ void C_TFPlayer::UpdateIDTarget()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Display appropriate hints for the target we're looking at
-//-----------------------------------------------------------------------------
-void C_TFPlayer::DisplaysHintsForTarget( C_BaseEntity *pTarget )
-{
-	// If the entity provides hints, ask them if they have one for this player
-	ITargetIDProvidesHint *pHintInterface = dynamic_cast<ITargetIDProvidesHint*>(pTarget);
-	if ( pHintInterface )
-	{
-		pHintInterface->DisplayHintTo( this );
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 int C_TFPlayer::GetRenderTeamNumber( void )

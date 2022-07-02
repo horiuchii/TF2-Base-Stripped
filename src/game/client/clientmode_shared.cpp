@@ -41,25 +41,6 @@
 #include "xbox/xbox_console.h"
 #endif
 
-#if defined( REPLAY_ENABLED )
-#include "replay/replaycamera.h"
-#include "replay/ireplaysystem.h"
-#include "replay/iclientreplaycontext.h"
-#include "replay/ireplaymanager.h"
-#include "replay/replay.h"
-#include "replay/ienginereplay.h"
-#include "replay/vgui/replayreminderpanel.h"
-#include "replay/vgui/replaymessagepanel.h"
-#include "econ/econ_controls.h"
-#include "econ/confirm_dialog.h"
-extern IClientReplayContext *g_pClientReplayContext;
-extern ConVar replay_rendersetting_renderglow;
-#endif
-
-#if defined USES_ECON_ITEMS
-#include "econ_item_view.h"
-#endif
-
 #if defined( TF_CLIENT_DLL )
 #include "c_tf_player.h"
 #include "econ_item_description.h"

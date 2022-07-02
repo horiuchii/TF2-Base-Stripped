@@ -129,15 +129,6 @@ bool CTFWeaponBuilder::Deploy( void )
 		pPlayer->SetNextAttack( gpGlobals->curtime );
 
 		m_flNextDenySound = 0;
-
-		// Set off the hint here, because we don't know until now if our building
-		// is rotate-able or not.
-		if ( m_hObjectBeingBuilt && !m_hObjectBeingBuilt->MustBeBuiltOnAttachmentPoint() )
-		{
-			// set the alt-fire hint so it gets removed when we holster
-			m_iAltFireHint = HINT_ALTFIRE_ROTATE_BUILDING;
-			pPlayer->StartHintTimer( m_iAltFireHint );
-		}
 	}
 
 	return bDeploy;
@@ -318,7 +309,6 @@ void CTFWeaponBuilder::SecondaryAttack( void )
 	{
 		if ( m_hObjectBeingBuilt )
 		{
-			pOwner->StopHintTimer( HINT_ALTFIRE_ROTATE_BUILDING );
 			m_hObjectBeingBuilt->RotateBuildAngles();
 		}
 	}

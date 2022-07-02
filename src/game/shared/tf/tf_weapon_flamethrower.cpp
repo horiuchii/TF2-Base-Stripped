@@ -143,7 +143,6 @@ void CTFFlameThrower::WeaponReset( void )
 //-----------------------------------------------------------------------------
 void CTFFlameThrower::Spawn( void )
 {
-	m_iAltFireHint = HINT_ALTFIRE_FLAMETHROWER;
 	BaseClass::Spawn();
 }
 

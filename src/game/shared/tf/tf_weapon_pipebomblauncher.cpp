@@ -97,7 +97,6 @@ CTFPipebombLauncher::~CTFPipebombLauncher()
 //-----------------------------------------------------------------------------
 void CTFPipebombLauncher::Spawn( void )
 {
-	m_iAltFireHint = HINT_ALTFIRE_PIPEBOMBLAUNCHER;
 	BaseClass::Spawn();
 }
 

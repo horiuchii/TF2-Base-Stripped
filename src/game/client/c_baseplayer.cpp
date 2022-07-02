@@ -41,18 +41,10 @@
 #include "fx.h"
 #include "dt_utlvector_recv.h"
 #include "cam_thirdperson.h"
-#if defined( REPLAY_ENABLED )
-#include "replay/replaycamera.h"
-#include "replay/ireplaysystem.h"
-#include "replay/ienginereplay.h"
-#endif
+
 #include "steam/steam_api.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
-
-#if defined USES_ECON_ITEMS
-#include "econ_wearable.h"
-#endif
 
 // NVNT haptics system interface
 #include "haptics/ihaptics.h"
@@ -255,18 +247,10 @@ END_RECV_TABLE()
 // DT_BasePlayer datatable.
 // -------------------------------------------------------------------------------- //
 
-#if defined USES_ECON_ITEMS
-	EXTERN_RECV_TABLE(DT_AttributeList);
-#endif
-
 	IMPLEMENT_CLIENTCLASS_DT(C_BasePlayer, DT_BasePlayer, CBasePlayer)
 		// We have both the local and nonlocal data in here, but the server proxies
 		// only send one.
 		RecvPropDataTable( "localdata", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalPlayerExclusive) ),
-
-#if defined USES_ECON_ITEMS
-		RecvPropDataTable(RECVINFO_DT(m_AttributeList),0, &REFERENCE_RECV_TABLE(DT_AttributeList) ),
-#endif
 
 		RecvPropDataTable(RECVINFO_DT(pl), 0, &REFERENCE_RECV_TABLE(DT_PlayerState), DataTableRecvProxy_StaticDataTable),
 
@@ -295,10 +279,6 @@ END_RECV_TABLE()
 		
 
 		RecvPropString( RECVINFO(m_szLastPlaceName) ),
-
-#if defined USES_ECON_ITEMS
-		RecvPropUtlVector( RECVINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER,	RecvPropEHandle(NULL, 0, 0) ),
-#endif
 
 	END_RECV_TABLE()
 
@@ -2849,25 +2829,6 @@ bool C_BasePlayer::GetSteamID( CSteamID *pID )
 	}
 	return false;
 }
-
-#if defined USES_ECON_ITEMS
-//-----------------------------------------------------------------------------
-// Purpose: Update the visibility of our worn items.
-//-----------------------------------------------------------------------------
-void C_BasePlayer::UpdateWearables( void )
-{
-	for ( int i=0; i<m_hMyWearables.Count(); ++i )
-	{
-		CEconWearable* pItem = m_hMyWearables[i];
-		if ( pItem )
-		{
-			pItem->ValidateModelIndex();
-			pItem->UpdateVisibility();
-			pItem->CreateShadow();
-		}
-	}
-}
-#endif // USES_ECON_ITEMS
 
 
 //-----------------------------------------------------------------------------

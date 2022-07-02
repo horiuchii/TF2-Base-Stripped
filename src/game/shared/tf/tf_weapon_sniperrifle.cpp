@@ -104,7 +104,6 @@ CTFSniperRifle::~CTFSniperRifle()
 //-----------------------------------------------------------------------------
 void CTFSniperRifle::Spawn()
 {
-	m_iAltFireHint = HINT_ALTFIRE_SNIPERRIFLE;
 	BaseClass::Spawn();
 
 	ResetTimers();

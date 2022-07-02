@@ -96,13 +96,6 @@ static char *CopyString( const char *in )
 	return n;
 }
 
-#ifdef STAGING_ONLY
-ConVar tf_strict_mouse_up_events( "tf_strict_mouse_up_events", "0", FCVAR_ARCHIVE, "Only allow Mouse-Release events to happens on panels we also Mouse-Downed in" );
-#endif
-
-// Temporary convar to help debug why the MvMVictoryMannUpPanel TabContainer is sometimes way off to the left.
-ConVar tf_debug_tabcontainer( "tf_debug_tabcontainer", "0", FCVAR_HIDDEN, "Spew TabContainer dimensions." );
-
 #if defined( VGUI_USEDRAGDROP )
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -4456,13 +4449,6 @@ int Panel::ComputePos( const char *pszInput, int &nPos, const int& nSize, const 
 		{
 			nPos = nPosDelta;
 		}
-	}
-
-	if ( tf_debug_tabcontainer.GetBool() && !Q_stricmp( "TabContainer", GetName() ) )
-	{
-		Msg( "TabContainer nFlags:%x nPos:%d nParentSize:%d nPosDelta:%d nSize:%d GetParent:%p (%s) pszInput:'%s'\n",
-				nFlags, nPos, nParentSize, nPosDelta, nSize, GetParent(), GetParent() ? GetParent()->GetName() : "??",
-				pszInput ? pszInput : "??" );
 	}
 
 	return nFlags;

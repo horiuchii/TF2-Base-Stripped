@@ -117,11 +117,6 @@ void CBoneMergeCache::UpdateCache()
 	}
 }
 
-
-#ifdef STAGING_ONLY
-ConVar r_captain_canteen_is_angry ( "r_captain_canteen_is_angry", "1" );
-#endif
-
 void CBoneMergeCache::MergeMatchingBones( int boneMask )
 {
 	UpdateCache();

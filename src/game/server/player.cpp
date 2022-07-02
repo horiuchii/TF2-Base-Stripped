@@ -61,7 +61,6 @@
 #include "gamestats.h"
 #include "npcevent.h"
 #include "datacache/imdlcache.h"
-#include "hintsystem.h"
 #include "env_debughistory.h"
 #include "fogcontroller.h"
 #include "gameinterface.h"
@@ -69,10 +68,6 @@
 #include "dt_utlvector_send.h"
 #include "vote_controller.h"
 #include "ai_speech.h"
-
-#if defined USES_ECON_ITEMS
-#include "econ_wearable.h"
-#endif
 
 // NVNT haptic utils
 #include "haptics/haptic_utils.h"
@@ -1654,11 +1649,6 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	CSound *pSound;
-
-	if ( Hints() )
-	{
-		Hints()->ResetHintTimers();
-	}
 
 	g_pGameRules->PlayerKilled( this, info );
 
@@ -3832,11 +3822,6 @@ void CBasePlayer::PreThink(void)
 	if ( g_fGameOver || m_iPlayerLocked )
 		return;         // intermission or finale
 
-	if ( Hints() )
-	{
-		Hints()->Update();
-	}
-
 	ItemPreFrame( );
 	WaterMove();
 
@@ -4901,12 +4886,6 @@ void CBasePlayer::InitialSpawn( void )
 //-----------------------------------------------------------------------------
 void CBasePlayer::Spawn( void )
 {
-	// Needs to be done before weapons are given
-	if ( Hints() )
-	{
-		Hints()->ResetHints();
-	}
-
 	SetClassname( "player" );
 
 	// Shared spawning code..

@@ -66,7 +66,6 @@ CTFGrenadeLauncher::~CTFGrenadeLauncher()
 //-----------------------------------------------------------------------------
 void CTFGrenadeLauncher::Spawn( void )
 {
-	m_iAltFireHint = HINT_ALTFIRE_GRENADELAUNCHER;
 	BaseClass::Spawn();
 }
 

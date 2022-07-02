@@ -135,15 +135,6 @@
 #include "abuse_report.h"
 #endif
 
-#ifdef USES_ECON_ITEMS
-#include "econ_item_system.h"
-#endif // USES_ECON_ITEMS
-
-#if defined( TF_CLIENT_DLL )
-#include "econ/tool_items/custom_texture_cache.h"
-
-#endif
-
 #ifdef WORKSHOP_IMPORT_ENABLED
 #include "fbxsystem/fbxsystem.h"
 #endif
@@ -274,11 +265,6 @@ INetworkStringTable *g_pStringTableMaterials = NULL;
 INetworkStringTable *g_pStringTableInfoPanel = NULL;
 INetworkStringTable *g_pStringTableClientSideChoreoScenes = NULL;
 INetworkStringTable *g_pStringTableServerMapCycle = NULL;
-
-#ifdef TF_CLIENT_DLL
-INetworkStringTable *g_pStringTableServerPopFiles = NULL;
-INetworkStringTable *g_pStringTableServerMapCycleMvM = NULL;
-#endif
 
 static CGlobalVarsBase dummyvars( true );
 // So stuff that might reference gpGlobals during DLL initialization won't have a NULL pointer.
@@ -1597,14 +1583,6 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 	IGameSystem::LevelInitPreEntityAllSystems(pMapName);
 
-#ifdef USES_ECON_ITEMS
-	GameItemSchema_t *pItemSchema = ItemSystem()->GetItemSchema();
-	if ( pItemSchema )
-	{
-		pItemSchema->BInitFromDelayedBuffer();
-	}
-#endif // USES_ECON_ITEMS
-
 	ResetWindspeed();
 
 #if !defined( NO_ENTITY_PREDICTION )
@@ -1663,11 +1641,6 @@ void CHLClient::ResetStringTablePointers()
 	g_pStringTableInfoPanel = NULL;
 	g_pStringTableClientSideChoreoScenes = NULL;
 	g_pStringTableServerMapCycle = NULL;
-
-#ifdef TF_CLIENT_DLL
-	g_pStringTableServerPopFiles = NULL;
-	g_pStringTableServerMapCycleMvM = NULL;
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1894,16 +1867,6 @@ void CHLClient::InstallStringTableCallback( const char *tableName )
 	{
 		g_pStringTableServerMapCycle = networkstringtable->FindTable( tableName );
 	}
-#ifdef TF_CLIENT_DLL
-	else if ( !Q_strcasecmp( tableName, "ServerPopFiles" ) )
-	{
-		g_pStringTableServerPopFiles = networkstringtable->FindTable( tableName );
-	}
-	else if ( !Q_strcasecmp( tableName, "ServerMapCycleMvM" ) )
-	{
-		g_pStringTableServerMapCycleMvM = networkstringtable->FindTable( tableName );
-	}
-#endif
 
 	InstallStringTableCallback_GameRules();
 }

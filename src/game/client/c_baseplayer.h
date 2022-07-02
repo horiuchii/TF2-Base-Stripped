@@ -20,17 +20,10 @@
 #include "timedevent.h"
 #include "smartptr.h"
 #include "fx_water.h"
-#include "hintsystem.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "c_env_fog_controller.h"
 #include "igameevents.h"
 #include "GameEventListener.h"
-
-#if defined USES_ECON_ITEMS
-#include "econ_item.h"
-#include "game_item_schema.h"
-#include "econ_item_view.h"
-#endif
 
 class C_BaseCombatWeapon;
 class C_BaseViewModel;
@@ -365,12 +358,6 @@ public:
 
 	void SetLadderNormal( Vector vecLadderNormal ) { m_vecLadderNormal = vecLadderNormal; }
 
-	// Hints
-	virtual CHintSystem		*Hints( void ) { return NULL; }
-	bool					ShouldShowHints( void ) { return Hints() ? Hints()->ShouldShowHints() : false; }
-	bool 					HintMessage( int hint, bool bForce = false, bool bOnlyIfClear = false ) { return Hints() ? Hints()->HintMessage( hint, bForce, bOnlyIfClear ) : false; }
-	void 					HintMessage( const char *pMessage ) { if (Hints()) Hints()->HintMessage( pMessage ); }
-
 	virtual	IMaterial *GetHeadLabelMaterial( void );
 
 	// Fog
@@ -386,13 +373,6 @@ public:
 	bool					ShouldAnnounceAchievement( void ){ return m_flNextAchievementAnnounceTime < gpGlobals->curtime; }
 	void					SetNextAchievementAnnounceTime( float flTime ){ m_flNextAchievementAnnounceTime = flTime; }
 
-#if defined USES_ECON_ITEMS
-	// Wearables
-	virtual void			UpdateWearables();
-	C_EconWearable			*GetWearable( int i ) { return m_hMyWearables[i]; }
-	int						GetNumWearables( void ) { return m_hMyWearables.Count(); }
-#endif
-
 	bool					HasFiredWeapon( void ) { return m_bFiredWeapon; }
 	void					SetFiredWeapon( bool bFlag ) { m_bFiredWeapon = bFlag; }
 
@@ -407,10 +387,6 @@ public:
 	
 	// Data for only the local player
 	CNetworkVarEmbedded( CPlayerLocalData, m_Local );
-
-#if defined USES_ECON_ITEMS
-	CNetworkVarEmbedded( CAttributeList, m_AttributeList );
-#endif
 
 	// Data common to all other players, too
 	CPlayerState			pl;
@@ -612,11 +588,6 @@ protected:
 
 	int				m_nForceVisionFilterFlags; // Force our vision filter to a specific setting
 	int				m_nLocalPlayerVisionFlags;
-
-#if defined USES_ECON_ITEMS
-	// Wearables
-	CUtlVector<CHandle<C_EconWearable > >	m_hMyWearables;
-#endif
 
 private:
 
