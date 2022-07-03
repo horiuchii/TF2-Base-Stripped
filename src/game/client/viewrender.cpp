@@ -2109,15 +2109,9 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			rect.height = view.height;
 
 			pRenderContext = materials->GetRenderContext();
-			if ( IsX360() )
-			{
-				// 360 doesn't create the Fullscreen texture
-				pRenderContext->CopyRenderTargetToTextureEx( GetFullFrameFrameBufferTexture( 1 ), 0, &rect, &rect );
-			}
-			else
-			{
-				pRenderContext->CopyRenderTargetToTextureEx( GetFullscreenTexture(), 0, &rect, &rect );
-			}
+
+			pRenderContext->CopyRenderTargetToTextureEx( GetFullscreenTexture(), 0, &rect, &rect );
+
 			pRenderContext.SafeRelease();
 			m_rbTakeFreezeFrame[ view.m_eStereoEye ] = false;
 		}
@@ -4977,11 +4971,6 @@ void CShadowDepthView::Draw()
 	{
 		render->Push3DView( (*this), VIEW_CLEAR_DEPTH, m_pRenderTarget, GetFrustum(), m_pDepthTexture );
 	}
-	else if( IsX360() )
-	{
-		//for the 360, the dummy render target has a separate depth buffer which we Resolve() from afterward
-		render->Push3DView( (*this), VIEW_CLEAR_DEPTH, m_pRenderTarget, GetFrustum() );
-	}
 
 	SetupCurrentView( origin, angles, VIEW_SHADOW_DEPTH_TEXTURE );
 
@@ -5021,12 +5010,6 @@ void CShadowDepthView::Draw()
 
 	pRenderContext.GetFrom( materials );
 
-	if( IsX360() )
-	{
-		//Resolve() the depth texture here. Before the pop so the copy will recognize that the resolutions are the same
-		pRenderContext->CopyRenderTargetToTextureEx( m_pDepthTexture, -1, NULL, NULL );
-	}
-
 	render->PopView( GetFrustum() );
 
 #if defined( _X360 )
@@ -5043,7 +5026,7 @@ void CFreezeFrameView::Setup( const CViewSetup &shadowViewIn )
 	BaseClass::Setup( shadowViewIn );
 
 	KeyValues *pVMTKeyValues = new KeyValues( "UnlitGeneric" );
-	pVMTKeyValues->SetString( "$basetexture", IsX360() ? "_rt_FullFrameFB1" : "_rt_FullScreen" );
+	pVMTKeyValues->SetString( "$basetexture", "_rt_FullScreen" );
 	pVMTKeyValues->SetInt( "$nocull", 1 );
 	pVMTKeyValues->SetInt( "$nofog", 1 );
 	pVMTKeyValues->SetInt( "$ignorez", 1 );
@@ -5247,19 +5230,6 @@ void CBaseWorldView::PopView()
 	pRenderContext->SetHeightClipMode( MATERIAL_HEIGHTCLIPMODE_DISABLE );
 	if( m_DrawFlags & (DF_RENDER_REFRACTION | DF_RENDER_REFLECTION) )
 	{
-		if ( IsX360() )
-		{
-			// these renders paths used their surfaces, so blit their results
-			if ( m_DrawFlags & DF_RENDER_REFRACTION )
-			{
-				pRenderContext->CopyRenderTargetToTextureEx( GetWaterRefractionTexture(), NULL, NULL );
-			}
-			if ( m_DrawFlags & DF_RENDER_REFLECTION )
-			{
-				pRenderContext->CopyRenderTargetToTextureEx( GetWaterReflectionTexture(), NULL, NULL );
-			}
-		}
-
 		render->PopView( GetFrustum() );
 		if (SavedLinearLightMapScale.x>=0)
 		{
@@ -5464,14 +5434,7 @@ void CBaseWorldView::SSAO_DepthPass()
 
 	pRenderContext.SafeRelease();
 
-	if( IsPC() )
-	{
-		render->Push3DView( (*this), VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pSSAO, GetFrustum() );
-	}
-	else if( IsX360() )
-	{
-		render->Push3DView( (*this), VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pSSAO, GetFrustum() );
-	}
+	render->Push3DView( (*this), VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pSSAO, GetFrustum() );
 
 	MDLCACHE_CRITICAL_SECTION();
 
@@ -5506,12 +5469,6 @@ void CBaseWorldView::SSAO_DepthPass()
 	m_DrawFlags &= ~DF_SSAO_DEPTH_PASS;
 
 	pRenderContext.GetFrom( materials );
-
-	if( IsX360() )
-	{
-		//Resolve() the depth texture here. Before the pop so the copy will recognize that the resolutions are the same
-		pRenderContext->CopyRenderTargetToTextureEx( NULL, -1, NULL, NULL );
-	}
 
 	render->PopView( GetFrustum() );
 

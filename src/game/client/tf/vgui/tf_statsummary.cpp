@@ -254,17 +254,6 @@ void CTFStatsSummaryPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 //-----------------------------------------------------------------------------
 void CTFStatsSummaryPanel::OnKeyCodePressed( KeyCode code )
 {
-	if ( IsX360() )
-	{
-		if ( code == KEY_XBUTTON_A )
-		{
-			OnCommand(  "nexttip" )	;
-		}
-		else if ( code == KEY_XBUTTON_B )
-		{
-			OnCommand( "vguicancel" );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------

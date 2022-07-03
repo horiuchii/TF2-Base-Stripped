@@ -111,16 +111,10 @@ void CTFMapInfoMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 	}
 #endif
 
-	if ( IsX360() )
+
+	if ( GameRules() )
 	{
-		SetDialogVariable( "gamemode", g_pVGuiLocalize->Find( GetMapType( m_szMapName ) ) );
-	}
-	else
-	{
-		if ( GameRules() )
-		{
-			SetDialogVariable( "gamemode", g_pVGuiLocalize->Find( GameRules()->GetGameTypeName() ) );
-		}
+		SetDialogVariable( "gamemode", g_pVGuiLocalize->Find( GameRules()->GetGameTypeName() ) );
 	}
 }
 
@@ -235,7 +229,7 @@ void CTFMapInfoMenu::OnCommand( const char *command )
 	if ( !Q_strcmp( command, "back" ) )
 	{
 		 // only want to go back to the Welcome menu if we're not already on a team
-		if ( !IsX360() && ( GetLocalPlayerTeam() == TEAM_UNASSIGNED ) )
+		if ( GetLocalPlayerTeam() == TEAM_UNASSIGNED )
 		{
 			m_pViewPort->ShowPanel( this, false );
 			m_pViewPort->ShowPanel( PANEL_INFO, true );
@@ -253,13 +247,7 @@ void CTFMapInfoMenu::OnCommand( const char *command )
 		}
 		else
 		{
-			// On console, we may already have a team due to the lobby assigning us one.
-			// We tell the server we're done with the map info menu, and it decides what to do with us.
-			if ( IsX360() )
-			{
-				engine->ClientCmd( "closedwelcomemenu" );
-			}
-			else if ( GetLocalPlayerTeam() == TEAM_UNASSIGNED )
+		if ( GetLocalPlayerTeam() == TEAM_UNASSIGNED )
 			{
 				m_pViewPort->ShowPanel( PANEL_TEAM, true );
 			}
@@ -587,16 +575,5 @@ const char *GetMapDisplayName( const char *mapName )
 //-----------------------------------------------------------------------------
 const char *CTFMapInfoMenu::GetMapType( const char *mapName )
 {
-	if ( IsX360() && mapName )
-	{
-		for ( int i = 0; i < ARRAYSIZE( s_Maps ); ++i )
-		{
-			if ( !Q_stricmp( s_Maps[i].pDiskName, mapName ) )
-			{
-				return s_Maps[i].pGameType;
-			}
-		}
-	}
-
 	return "";
 }

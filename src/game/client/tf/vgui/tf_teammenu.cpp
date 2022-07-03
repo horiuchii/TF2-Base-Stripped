@@ -337,29 +337,14 @@ void CTFTeamMenu::ShowPanel( bool bShow )
 		switch ( C_TFPlayer::GetLocalTFPlayer()->GetTeamNumber() )
 		{
 		case TF_TEAM_BLUE:
-			if ( IsConsole() )
-			{
-				m_pBlueTeamButton->OnCursorEntered();
-				m_pBlueTeamButton->SetDefaultAnimation( "enter_enabled" );
-			}
 			GetFocusNavGroup().SetCurrentFocus( m_pBlueTeamButton->GetVPanel(), m_pBlueTeamButton->GetVPanel() );
 			break;
 
 		case TF_TEAM_RED:
-			if ( IsConsole() )
-			{
-				m_pRedTeamButton->OnCursorEntered();
-				m_pRedTeamButton->SetDefaultAnimation( "enter_enabled" );
-			}
 			GetFocusNavGroup().SetCurrentFocus( m_pRedTeamButton->GetVPanel(), m_pRedTeamButton->GetVPanel() );
 			break;
 
 		default:
-			if ( IsConsole() )
-			{
-				m_pAutoTeamButton->OnCursorEntered();
-				m_pAutoTeamButton->SetDefaultAnimation( "enter_enabled" );
-			}
 			GetFocusNavGroup().SetCurrentFocus( m_pAutoTeamButton->GetVPanel(), m_pAutoTeamButton->GetVPanel() );
 			break;
 		}
@@ -368,16 +353,6 @@ void CTFTeamMenu::ShowPanel( bool bShow )
 	{
 		SetVisible( false );
 		SetMouseInputEnabled( false );
-
-		if ( IsConsole() )
-		{
-			// Close the door behind us
-			CTFTeamButton *pButton = dynamic_cast< CTFTeamButton *> ( GetFocusNavGroup().GetCurrentFocus() );
-			if ( pButton )
-			{
-				pButton->OnCursorExited();
-			}
-		}
 	}
 }
 

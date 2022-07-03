@@ -21,23 +21,6 @@
 #define COMPILER_CLANG 1
 #endif
 
-#if defined( _X360 )
-	#define NO_STEAM
-	#define NO_VOICE
-	// for the 360, the ppc platform and the rtos are tightly coupled
-	// setup the 360 environment here !once! for much less leaf module include wackiness
-	// these are critical order and purposely appear *before* anything else
-	#define _XBOX
-#include <xtl.h>
-	#include <xaudio2.h>
-	#include <xbdm.h>
-#include <Xgraphics.h>
-	#include <xui.h>
-	#include <pmcpbsetup.h>
-#include <XMAHardwareAbstraction.h>
-	#undef _XBOX
-#endif
-
 #include "wchartypes.h"
 #include "basetypes.h"
 #include "tier0/valve_off.h"
@@ -89,9 +72,8 @@
 #define IsDebug() false
 #endif
 
-// Deprecating, infavor of IsX360() which will revert to IsXbox()
-// after confidence of xbox 1 code flush
-#define IsXbox()	false
+// temporary, remove me
+#define IsPC() true
 
 #ifdef _WIN32
 	#define IsLinux() false
@@ -100,10 +82,6 @@
 	#define PLATFORM_WINDOWS 1 // Windows PC or Xbox 360
 	#ifndef _X360
 		#define IsWindows() true
-		#define IsPC() true
-		#define IsConsole() false
-		#define IsX360() false
-		#define IsPS3() false
 		#define IS_WINDOWS_PC
 		#define PLATFORM_WINDOWS_PC 1 // Windows PC
 		#ifdef _WIN64
@@ -121,10 +99,6 @@
 			#define _CONSOLE
 		#endif
 		#define IsWindows() false
-		#define IsPC() false
-		#define IsConsole() true
-		#define IsX360() true
-		#define IsPS3() false
 	#endif
 	// Adding IsPlatformOpenGL() to help fix a bunch of code that was using IsPosix() to infer if the DX->GL translation layer was being used.
 	#if defined( DX_TO_GL_ABSTRACTION )
@@ -133,11 +107,7 @@
 		#define IsPlatformOpenGL() false
 	#endif
 #elif defined(POSIX)
-	#define IsPC() true
 	#define IsWindows() false
-	#define IsConsole() false
-	#define IsX360() false
-	#define IsPS3() false
 	#if defined( LINUX )
 		#define IsLinux() true
 	#else
@@ -1341,7 +1311,8 @@ PLATFORM_INTERFACE bool Is64BitOS();
 
 inline const char *GetPlatformExt( void )
 {
-	return IsX360() ? ".360" : "";
+	//return IsX360() ? ".360" : "";
+	return "";
 }
 
 // flat view, 6 hw threads
@@ -1364,10 +1335,6 @@ inline const char *GetPlatformExt( void )
 // Include additional dependant header components.
 //-----------------------------------------------------------------------------
 #include "tier0/fasttimer.h"
-
-#if defined( _X360 )
-#include "xbox/xbox_core.h"
-#endif
 
 //-----------------------------------------------------------------------------
 // Methods to invoke the constructor, copy constructor, and destructor

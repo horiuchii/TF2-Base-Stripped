@@ -69,7 +69,7 @@ ConVar tf_disguise_menu_controller_mode( "tf_disguise_menu_controller_mode", "0"
 //-----------------------------------------------------------------------------
 void CHudMenuSpyDisguise::ApplySchemeSettings( IScheme *pScheme )
 {
-	bool b360Style = ( IsConsole() || tf_disguise_menu_controller_mode.GetBool() );
+	bool b360Style = ( tf_disguise_menu_controller_mode.GetBool() );
 
 	if ( b360Style )
 	{
@@ -187,7 +187,7 @@ int	CHudMenuSpyDisguise::HudElementKeyInput( int down, ButtonCode_t keynum, cons
 		TF_CLASS_SPY
 	};
 
-	bool bController = ( IsConsole() || ( keynum >= JOYSTICK_FIRST ) );
+	bool bController = ( keynum >= JOYSTICK_FIRST );
 
 	if ( bController )
 	{
@@ -377,7 +377,7 @@ void CHudMenuSpyDisguise::SetVisible( bool state )
 		// close the weapon selection menu
 		engine->ClientCmd( "cancelselect" );
 
-		bool bConsoleMode = ( IsConsole() || tf_disguise_menu_controller_mode.GetBool() );
+		bool bConsoleMode = ( tf_disguise_menu_controller_mode.GetBool() );
 			
 		if ( bConsoleMode != m_bInConsoleMode )
 		{

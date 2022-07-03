@@ -457,10 +457,6 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 		// Try and find the death identifier in the icon list
 		// On consoles, we flip usage of the inverted icon to make it more visible
 		bool bInverted = m_DeathNotices[iMsg].bLocalPlayerInvolved;
-		if ( IsConsole() )
-		{
-			bInverted = !bInverted;
-		}
 		m_DeathNotices[iMsg].iconDeath = GetIcon( m_DeathNotices[iMsg].szIcon, bInverted );
 		if ( !m_DeathNotices[iMsg].iconDeath )
 		{

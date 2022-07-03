@@ -129,7 +129,7 @@ extern ConVar thirdperson_screenspace;
 //-----------------------------------------------------------------
 bool CInput::EnableJoystickMode()
 {
-	return IsConsole() || in_joystick.GetBool();
+	return in_joystick.GetBool();
 }
 
 
@@ -458,12 +458,6 @@ void CInput::Joystick_Advanced(void)
 	// called whenever an update is needed
 	int	i;
 	DWORD dwTemp;
-
-	if ( IsX360() )
-	{
-		// Xbox always uses a joystick
-		in_joystick.SetValue( 1 );
-	}
 
 	// Initialize all the maps
 	for ( i = 0; i < MAX_JOYSTICK_AXES; i++ )
@@ -852,7 +846,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	cmd->mousedx = angle;
 
 	// apply look control
-	if ( IsX360() || in_jlook.state & 1 )
+	if ( in_jlook.state & 1 )
 	{
 		float angle = 0;
 		if ( JOY_ABSOLUTE_AXIS == gameAxes[GAME_AXIS_PITCH].controlType )

@@ -334,15 +334,6 @@ void CTFSpectatorGUI::UpdateKeyLabels( void )
 		Q_FileBase( engine->GetLevelName(), tempname, sizeof( tempname ) );
 		Q_strlower( tempname );
 
-		if ( IsX360() )
-		{
-			char *pExt = Q_stristr( tempname, ".360" );
-			if ( pExt )
-			{
-				*pExt = '\0';
-			}
-		}
-
 		Q_strncpy( szMapName, GetMapDisplayName( tempname ), sizeof( szMapName ) );
 
 		g_pVGuiLocalize->ConvertANSIToUnicode( szMapName, wMapName, sizeof(wMapName));

@@ -749,9 +749,6 @@ CHudChatHistory *CBaseHudChat::GetChatHistory( void )
 
 void CBaseHudChat::Init( void )
 {
-	if ( IsXbox() )
-		return;
-
 	ListenForGameEvent( "hltv_chat" );
 }
 

@@ -51,11 +51,6 @@ void CTFAmmoPack::Spawn( void )
 
 	// Die in 30 seconds
 	SetContextThink( &CBaseEntity::SUB_Remove, gpGlobals->curtime + 30, "DieContext" );
-
-	if ( IsX360() )
-	{
-		RemoveEffects( EF_ITEM_BLINK );
-	}
 }
 
 void CTFAmmoPack::Precache( void )
