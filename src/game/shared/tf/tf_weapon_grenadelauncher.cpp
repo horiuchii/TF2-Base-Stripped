@@ -90,10 +90,6 @@ bool CTFGrenadeLauncher::Deploy( void )
 //-----------------------------------------------------------------------------
 int CTFGrenadeLauncher::GetMaxClip1( void ) const
 {
-#ifdef _X360 
-	return TF_GRENADE_LAUNCHER_XBOX_CLIP;
-#endif
-
 	return BaseClass::GetMaxClip1();
 }
 
@@ -102,10 +98,6 @@ int CTFGrenadeLauncher::GetMaxClip1( void ) const
 //-----------------------------------------------------------------------------
 int CTFGrenadeLauncher::GetDefaultClip1( void ) const
 {
-#ifdef _X360
-	return TF_GRENADE_LAUNCHER_XBOX_CLIP;
-#endif
-
 	return BaseClass::GetDefaultClip1();
 }
 

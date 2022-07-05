@@ -20,45 +20,18 @@
 #include "achievement_notification_panel.h"
 #include "c_playerresource.h"
 #include "gamestats.h"
-#ifdef TF_CLIENT_DLL
-#include "econ_item_inventory.h"
-#endif //TF_CLIENT_DLL
-#else
-#include "enginecallback.h"
 #endif // CLIENT_DLL
-#ifndef _X360
 #include "steam/isteamuserstats.h"
 #include "steam/isteamfriends.h"
 #include "steam/isteamutils.h"
 #include "steam/steam_api.h"
 #include "steam/isteamremotestorage.h"
-#else
-#include "xbox/xbox_win32stubs.h"
-#endif
 #include "tier3/tier3.h"
 #include "vgui/ILocalize.h"
-#ifdef _X360
-#include "ixboxsystem.h"
-#endif  // _X360
 #include "engine/imatchmaking.h"
 #include "tier0/vprof.h"
 
-#if defined(TF_DLL) || defined(TF_CLIENT_DLL)
-#include "tf_gamerules.h"
-#endif
-
 ConVar	cc_achievement_debug( "achievement_debug", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Turn on achievement debug msgs." );
-
-#ifdef CSTRIKE_DLL
-//=============================================================================
-// HPE_BEGIN:
-// [Forrest] Allow achievements/stats to be turned off for a server
-//=============================================================================
-ConVar	sv_nostats( "sv_nostats", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Disable collecting statistics and awarding achievements." );
-//=============================================================================
-// HPE_END
-//=============================================================================
-#endif // CSTRIKE_DLL
 
 const char *COM_GetModDirectory();
 
@@ -89,11 +62,6 @@ static void WriteAchievementGlobalState( KeyValues *pKV, bool bPersistToSteamClo
 //=============================================================================
 
 {
-#ifdef _X360
-	if ( XBX_GetStorageDeviceId() == XBX_INVALID_STORAGE_ID || XBX_GetStorageDeviceId() == XBX_STORAGE_DECLINED )
-		return;
-#endif
-
 	char szFilename[_MAX_PATH];
 
 	Q_snprintf( szFilename, sizeof( szFilename ), "GameState.txt" );
@@ -163,13 +131,6 @@ static void WriteAchievementGlobalState( KeyValues *pKV, bool bPersistToSteamClo
     //=============================================================================
     // HPE_END
     //=============================================================================
-
-#ifdef _X360
-	if ( xboxsystem )
-	{
-		xboxsystem->FinishContainerWrites();
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -602,8 +563,6 @@ bool CAchievementMgr::HasAchieved( const char *pchName )
 //-----------------------------------------------------------------------------
 void CAchievementMgr::DownloadUserData()
 {
-	if ( IsPC() )
-	{
 #ifndef NO_STEAM
 		if ( steamapicontext->SteamUserStats() )
 		{
@@ -611,7 +570,6 @@ void CAchievementMgr::DownloadUserData()
 			steamapicontext->SteamUserStats()->RequestCurrentStats();
 		}
 #endif
-	}
 }
 
 const char *COM_GetModDirectory()
@@ -637,8 +595,6 @@ const char *COM_GetModDirectory()
 //-----------------------------------------------------------------------------
 void CAchievementMgr::UploadUserData()
 {
-	if ( IsPC() )
-	{
 #ifndef NO_STEAM
 		if ( steamapicontext->SteamUserStats() )
 		{
@@ -648,7 +604,6 @@ void CAchievementMgr::UploadUserData()
 			m_bSteamDataDirty = false;
 		}
 #endif
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -852,8 +807,6 @@ void CAchievementMgr::AwardAchievement( int iAchievementID )
 	// save state at next good opportunity.  (Don't do it immediately, may hitch at bad time.)
 	SetDirty( true );
 
-	if ( IsPC() )
-	{		
 #ifndef NO_STEAM
 		if ( steamapicontext->SteamUserStats() )
 		{
@@ -867,7 +820,6 @@ void CAchievementMgr::AwardAchievement( int iAchievementID )
 			}
 		}
 #endif
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -930,20 +882,11 @@ extern bool IsInCommentaryMode( void );
 bool CAchievementMgr::CheckAchievementsEnabled()
 {
 	// if PC, Steam must be running and user logged in
-	if ( IsPC() && !LoggedIntoSteam() )
+	if ( !LoggedIntoSteam() )
 	{
 		Msg( "Achievements disabled: Steam not running.\n" );
 		return false;
 	}
-
-#if defined( _X360 )
-	uint state = XUserGetSigninState( XBX_GetPrimaryUserId() );
-	if ( state == eXUserSigninState_NotSignedIn )
-	{
-		Msg( "Achievements disabled: not signed in to XBox user account.\n" );
-		return false;
-	}
-#endif
 
 	// can't be in commentary mode, user is invincible
 	if ( IsInCommentaryMode() )
@@ -982,42 +925,24 @@ bool CAchievementMgr::CheckAchievementsEnabled()
 	//=============================================================================
 	// HPE_END
 	//=============================================================================
-#endif // CSTRIKE_DLL	
-
-#if defined(TF_DLL) || defined(TF_CLIENT_DLL)
-	// no achievements for now in training
-	if ( TFGameRules() && TFGameRules()->IsInTraining() && TFGameRules()->AllowTrainingAchievements() == false )
-	{
-		return false;
-	}
-
-	ConVarRef tf_bot_offline_practice( "tf_bot_offline_practice" );
-	// no achievements for offline practice
-	if ( tf_bot_offline_practice.GetInt() != 0 )
-	{
-		return false;
-	}
-#endif
+#endif // CSTRIKE_DLL
 
 #if DEBUG_ACHIEVEMENTS_IN_RELEASE
 	return true;
 #endif
 
-	if ( IsPC() )
+	// Don't award achievements if cheats are turned on.  
+	if ( WereCheatsEverOn() )
 	{
-		// Don't award achievements if cheats are turned on.  
-		if ( WereCheatsEverOn() )
-		{
 #ifndef NO_STEAM
-			// Cheats get turned on automatically if you run with -dev which many people do internally, so allow cheats if developer is turned on and we're not running
-			// on Steam public
-			if ( developer.GetInt() == 0 || !steamapicontext->SteamUtils() || (k_EUniversePublic == steamapicontext->SteamUtils()->GetConnectedUniverse()) )
-			{
-				Msg( "Achievements disabled: cheats turned on in this app session.\n" );
-				return false;
-			}
-#endif
+		// Cheats get turned on automatically if you run with -dev which many people do internally, so allow cheats if developer is turned on and we're not running
+		// on Steam public
+		if ( developer.GetInt() == 0 || !steamapicontext->SteamUtils() || (k_EUniversePublic == steamapicontext->SteamUtils()->GetConnectedUniverse()) )
+		{
+			Msg( "Achievements disabled: cheats turned on in this app session.\n" );
+			return false;
 		}
+#endif
 	}
 
 	return true;
@@ -1046,21 +971,12 @@ bool CalcPlayersOnFriendsList( int iMinFriends )
 
 	// determine local player team
 	int iLocalPlayerIndex =  GetLocalPlayerIndex();
-	//uint64 XPlayerUid = 0;
 
-	if ( IsPC() )
-	{
 #ifndef NO_STEAM
-		if ( !steamapicontext->SteamFriends() || !steamapicontext->SteamUtils() || !g_pGameRules->IsMultiplayer() )
+	if ( !steamapicontext->SteamFriends() || !steamapicontext->SteamUtils() || !g_pGameRules->IsMultiplayer() )
 #endif
-			return false;
-
-	}
-	else
-	{
-		// other platforms...?
 		return false;
-	}
+
 	// Loop through the players
 	int iTotalFriends = 0;
 	for( int iPlayerIndex = 1 ; iPlayerIndex <= MAX_PLAYERS; iPlayerIndex++ )
@@ -1068,20 +984,17 @@ bool CalcPlayersOnFriendsList( int iMinFriends )
 		// find all players who are on the local player's team
 		if( ( iPlayerIndex != iLocalPlayerIndex ) && ( g_PR->IsConnected( iPlayerIndex ) ) )
 		{
-			if ( IsPC() )
-			{
-				player_info_t pi;
-				if ( !engine->GetPlayerInfo( iPlayerIndex, &pi ) )
-					continue;
-				if ( !pi.friendsID )
-					continue;
+			player_info_t pi;
+			if ( !engine->GetPlayerInfo( iPlayerIndex, &pi ) )
+				continue;
+			if ( !pi.friendsID )
+				continue;
 #ifndef NO_STEAM
-				// check and see if they're on the local player's friends list
-				CSteamID steamID( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
-				if ( !steamapicontext->SteamFriends()->HasFriend( steamID, /*k_EFriendFlagImmediate*/ 0x04 ) )
-					continue;
+			// check and see if they're on the local player's friends list
+			CSteamID steamID( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
+			if ( !steamapicontext->SteamFriends()->HasFriend( steamID, /*k_EFriendFlagImmediate*/ 0x04 ) )
+				continue;
 #endif
-			}
 
 			iTotalFriends++;
 		}
@@ -1184,12 +1097,6 @@ int	CalcPlayerCount()
 //-----------------------------------------------------------------------------
 void CAchievementMgr::ResetAchievements()
 {
-	if ( !IsPC() )
-	{
-		DevMsg( "Only available on PC\n" );
-		return;
-	}
-
 	if ( !LoggedIntoSteam() )
 	{
 		Msg( "Steam not running, achievements disabled. Cannot reset achievements.\n" );
@@ -1216,12 +1123,6 @@ void CAchievementMgr::ResetAchievements()
 
 void CAchievementMgr::ResetAchievement( int iAchievementID )
 {
-	if ( !IsPC() )
-	{
-		DevMsg( "Only available on PC\n" );
-		return;
-	}
-
 	if ( !LoggedIntoSteam() )
 	{
 		Msg( "Steam not running, achievements disabled. Cannot reset achievements.\n" );
@@ -1251,7 +1152,7 @@ void CAchievementMgr::ResetAchievement( int iAchievementID )
 //-----------------------------------------------------------------------------
 void CAchievementMgr::PrintAchievementStatus()
 {
-	if ( IsPC() && !LoggedIntoSteam() )
+	if ( !LoggedIntoSteam() )
 	{
 		Msg( "Steam not running, achievements disabled. Cannot view or unlock achievements.\n" );
 		return;

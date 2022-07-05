@@ -280,7 +280,6 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			if ( iRoundScore > 0 )
 				bShow = true;
 
-#if !defined( _X360 )
 			CAvatarImagePanel *pPlayerAvatar = dynamic_cast<CAvatarImagePanel *>( FindChildByName( CFmtStr( "Player%dAvatar", i ) ) );
 
 			if ( pPlayerAvatar )
@@ -293,7 +292,6 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 
 				pPlayerAvatar->SetVisible( bShow );
 			}
-#endif
 			vgui::Label *pPlayerName = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dName", i ) ) );
 			vgui::Label *pPlayerClass = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dClass", i ) ) );
 			vgui::Label *pPlayerScore = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dScore", i ) ) );

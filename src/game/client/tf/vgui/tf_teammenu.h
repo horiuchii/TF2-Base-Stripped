@@ -65,11 +65,6 @@ public:
 	void Update();
 	void ShowPanel( bool bShow );
 
-#ifdef _X360
-	CON_COMMAND_MEMBER_F( CTFTeamMenu, "join_team", Join_Team, "Send a jointeam command", 0 );
-#endif
-
-
 	bool IsBlueTeamDisabled(){ return m_bBlueDisabled; }
 	bool IsRedTeamDisabled(){ return m_bRedDisabled; }
 
@@ -91,12 +86,7 @@ private:
 	CTFTeamButton	*m_pAutoTeamButton;
 	CTFTeamButton	*m_pSpecTeamButton;
 	CTFLabel		*m_pSpecLabel;
-
-#ifdef _X360
-	CTFFooter		*m_pFooter;
-#else
 	CTFButton		*m_pCancelButton;
-#endif
 
 	bool m_bRedDisabled;
 	bool m_bBlueDisabled;

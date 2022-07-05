@@ -54,11 +54,8 @@ bool SwapClosecaptionFile( void *pData )
 	pData = (byte*)pHdr + pHdr->dataoffset;
 	swap.SwapBufferToTargetEndian( (wchar_t*)pData, (wchar_t*)pData, pHdr->numblocks * pHdr->blocksize / sizeof(wchar_t) );
 
-	if ( IsPC() )
-	{
-		// post-swap file header
-		swap.SwapFieldsToTargetEndian( pHdr );
-	}
+	// post-swap file header
+	swap.SwapFieldsToTargetEndian( pHdr );
 
 	return true;
 }

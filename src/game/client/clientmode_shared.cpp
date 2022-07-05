@@ -37,14 +37,6 @@
 #include "hud_vote.h"
 #include "ienginevgui.h"
 #include "sourcevr/isourcevirtualreality.h"
-#if defined( _X360 )
-#include "xbox/xbox_console.h"
-#endif
-
-#if defined( TF_CLIENT_DLL )
-#include "c_tf_player.h"
-#include "econ_item_description.h"
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -132,7 +124,7 @@ CON_COMMAND( hud_reloadscheme, "Reloads hud layout and animation scripts." )
 }
 
 #ifdef _DEBUG
-CON_COMMAND_F( crash, "Crash the client. Optional parameter -- type of crash:\n 0: read from NULL\n 1: write to NULL\n 2: DmCrashDump() (xbox360 only)", FCVAR_CHEAT )
+CON_COMMAND_F( crash, "Crash the client. Optional parameter -- type of crash:\n 0: read from NULL\n 1: write to NULL", FCVAR_CHEAT )
 {
 	int crashtype = 0;
 	int dummy;
@@ -149,11 +141,6 @@ CON_COMMAND_F( crash, "Crash the client. Optional parameter -- type of crash:\n 
 		case 1:
 			*((int *)NULL) = 42;
 			break;
-#if defined( _X360 )
-		case 2:
-			XBX_CrashDump(false);
-			break;
-#endif
 		default:
 			Msg("Unknown variety of crash. You have now failed to crash. I hope you're happy.\n");
 			break;
@@ -263,12 +250,6 @@ ClientModeShared::ClientModeShared()
 	m_pChatElement = NULL;
 	m_pWeaponSelection = NULL;
 	m_nRootSize[ 0 ] = m_nRootSize[ 1 ] = -1;
-
-#if defined( REPLAY_ENABLED )
-	m_pReplayReminderPanel = NULL;
-	m_flReplayStartRecordTime = 0.0f;
-	m_flReplayStopRecordTime = 0.0f;
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -323,11 +304,6 @@ void ClientModeShared::Init()
 	Assert( m_pViewport );
 	m_pViewport->LoadControlSettings( "scripts/HudLayout.res", NULL, NULL, pConditions );
 
-#if defined( REPLAY_ENABLED )
- 	m_pReplayReminderPanel = GET_HUDELEMENT( CReplayReminderPanel );
- 	Assert( m_pReplayReminderPanel );
-#endif
-
 	ListenForGameEvent( "player_connect_client" );
 	ListenForGameEvent( "player_disconnect" );
 	ListenForGameEvent( "player_team" );
@@ -336,24 +312,7 @@ void ClientModeShared::Init()
 	ListenForGameEvent( "teamplay_broadcast_audio" );
 	ListenForGameEvent( "achievement_earned" );
 
-#if defined( TF_CLIENT_DLL )
-	ListenForGameEvent( "item_found" );
-#endif 
-
-#if defined( REPLAY_ENABLED )
-	ListenForGameEvent( "replay_startrecord" );
-	ListenForGameEvent( "replay_endrecord" );
-	ListenForGameEvent( "replay_replaysavailable" );
-	ListenForGameEvent( "replay_servererror" );
-	ListenForGameEvent( "game_newmap" );
-#endif
-
-#ifndef _XBOX
 	HLTVCamera()->Init();
-#if defined( REPLAY_ENABLED )
-	ReplayCamera()->Init();
-#endif
-#endif
 
 	m_CursorNone = vgui::dc_none;
 
@@ -994,14 +953,8 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			}
 
 			wchar_t wszLocalized[100];
-			if (IsPC())
-			{
-				g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_game" ), 2, wszPlayerName, wszReason );
-			}
-			else
-			{
-				g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_game" ), 1, wszPlayerName );
-			}
+
+			g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_game" ), 2, wszPlayerName, wszReason );
 
 			char szLocalized[100];
 			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
@@ -1208,169 +1161,6 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			}
 		}
 	}
-#if defined( TF_CLIENT_DLL )
-	else if ( Q_strcmp( "item_found", eventname ) == 0 )
-	{
-		int iPlayerIndex = event->GetInt( "player" );
-		entityquality_t iItemQuality = event->GetInt( "quality" );
-		int iMethod = event->GetInt( "method" );
-		int iItemDef = event->GetInt( "itemdef" );
-		bool bIsStrange = event->GetInt( "isstrange" );
-		bool bIsUnusual = event->GetInt( "isunusual" );
-		float flWear = event->GetFloat( "wear" );
-
-		C_BasePlayer *pPlayer = UTIL_PlayerByIndex( iPlayerIndex );
-		const GameItemDefinition_t *pItemDefinition = dynamic_cast<GameItemDefinition_t *>( GetItemSchema()->GetItemDefinition( iItemDef ) );
-
-		if ( !pPlayer || !pItemDefinition || pItemDefinition->IsHidden() )
-			return;
-
-		if ( g_PR )
-		{
-			wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-			g_pVGuiLocalize->ConvertANSIToUnicode( g_PR->GetPlayerName( iPlayerIndex ), wszPlayerName, sizeof( wszPlayerName ) );
-
-			if ( iMethod < 0 || iMethod >= ARRAYSIZE( g_pszItemFoundMethodStrings ) )
-			{
-				iMethod = 0;
-			}
-
-			const char *pszLocString = g_pszItemFoundMethodStrings[iMethod];
-			if ( pszLocString )
-			{
-				wchar_t wszItemFound[256];
-				_snwprintf( wszItemFound, ARRAYSIZE( wszItemFound ), L"%ls", g_pVGuiLocalize->Find( pszLocString ) );
-
-				wchar_t *colorMarker = wcsstr( wszItemFound, L"::" );
-				const CEconItemRarityDefinition* pItemRarity = GetItemSchema()->GetRarityDefinition( pItemDefinition->GetRarity() );
-
-				if ( colorMarker )
-				{	
-					if ( pItemRarity )
-					{
-						attrib_colors_t colorRarity = pItemRarity->GetAttribColor();
-						vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
-						vgui::IScheme *pScheme = vgui::scheme()->GetIScheme( scheme );
-						Color color = pScheme->GetColor( GetColorNameForAttribColor( colorRarity ), Color( 255, 255, 255, 255 ) );
-						hudChat->SetCustomColor( color );
-					}
-					else
-					{
-						const char *pszQualityColorString = EconQuality_GetColorString( (EEconItemQuality)iItemQuality );
-						if ( pszQualityColorString )
-						{
-							hudChat->SetCustomColor( pszQualityColorString );
-						}
-					}
-
-					*(colorMarker+1) = COLOR_CUSTOM;
-				}
-
-				// TODO: Update the localization strings to only have two format parameters since that's all we need.
-				wchar_t wszLocalizedString[256];
-				g_pVGuiLocalize->ConstructString( 
-					wszLocalizedString, 
-					sizeof( wszLocalizedString ), 
-					LOCCHAR( "%s1" ),
-					1, 
-					CEconItemLocalizedFullNameGenerator( GLocalizationProvider(), pItemDefinition, iItemQuality ).GetFullName()
-				);
-
-				locchar_t tempName[MAX_ITEM_NAME_LENGTH];
-				if ( pItemRarity )
-				{
-					// grade and Wear
-					loc_scpy_safe( tempName, wszLocalizedString );
-
-					const locchar_t *loc_WearText = LOCCHAR("");
-					const char *pszTooltipText = "TFUI_InvTooltip_Rarity";
-
-					if ( !IsWearableSlot( pItemDefinition->GetDefaultLoadoutSlot() ) )
-					{
-						loc_WearText = g_pVGuiLocalize->Find( GetWearLocalizationString( flWear ) );
-					}
-					else
-					{
-						pszTooltipText = "TFUI_InvTooltip_RarityNoWear";
-					}
-
-					g_pVGuiLocalize->ConstructString( wszLocalizedString,
-						ARRAYSIZE( wszLocalizedString ) * sizeof( locchar_t ),
-						g_pVGuiLocalize->Find( pszTooltipText ),
-						3,
-						g_pVGuiLocalize->Find( pItemRarity->GetLocKey() ),
-						tempName,
-						loc_WearText
-					);
-
-					if ( bIsUnusual )
-					{
-						loc_scpy_safe( tempName, wszLocalizedString );
-
-						g_pVGuiLocalize->ConstructString( wszLocalizedString,
-							ARRAYSIZE( wszLocalizedString ) * sizeof( locchar_t ),
-							LOCCHAR( "%s1 %s2" ),
-							2,
-							g_pVGuiLocalize->Find( "rarity4" ),
-							tempName 
-						);
-					}
-
-					if ( bIsStrange )
-					{
-						loc_scpy_safe( tempName, wszLocalizedString );
-
-						g_pVGuiLocalize->ConstructString( wszLocalizedString,
-							ARRAYSIZE( wszLocalizedString ) * sizeof( locchar_t ),
-							LOCCHAR( "%s1 %s2" ),
-							2,
-							g_pVGuiLocalize->Find( "strange" ),
-							tempName
-						);
-					}
-				}
-				
-				loc_scpy_safe( tempName, wszLocalizedString );
-				g_pVGuiLocalize->ConstructString(
-					wszLocalizedString,
-					sizeof( wszLocalizedString ),
-					wszItemFound,
-					3,
-					wszPlayerName, tempName, L"" );
-
-				char szLocalized[256];
-				g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalizedString, szLocalized, sizeof( szLocalized ) );
-
-				hudChat->ChatPrintf( iPlayerIndex, CHAT_FILTER_SERVERMSG, "%s", szLocalized );
-			}
-		}		
-	}
-#endif
-#if defined( REPLAY_ENABLED )
-	else if ( !V_strcmp( "replay_servererror", eventname ) )
-	{
-		DisplayReplayMessage( event->GetString( "error", "#Replay_DefaultServerError" ), replay_msgduration_error.GetFloat(), true, NULL, false );
-	}
-	else if ( !V_strcmp( "replay_startrecord", eventname ) )
-	{
-		m_flReplayStartRecordTime = gpGlobals->curtime;
-	}
-	else if ( !V_strcmp( "replay_endrecord", eventname ) )
-	{
-		m_flReplayStopRecordTime = gpGlobals->curtime;
-	}
-	else if ( !V_strcmp( "replay_replaysavailable", eventname ) )
-	{
-		DisplayReplayMessage( "#Replay_ReplaysAvailable", replay_msgduration_replaysavailable.GetFloat(), false, NULL, false );
-	}
-
-	else if ( !V_strcmp( "game_newmap", eventname ) )
-	{
-		// Make sure the instance count is reset to 0.  Sometimes the count stay in sync and we get replay messages displaying lower than they should.
-		CReplayMessagePanel::RemoveAll();
-	}
-#endif
-
 	else
 	{
 		DevMsg( 2, "Unhandled GameEvent in ClientModeShared::FireGameEvent - %s\n", event->GetName()  );
@@ -1412,73 +1202,15 @@ void ClientModeShared::UpdateReplayMessages()
 
 void ClientModeShared::ClearReplayMessageList()
 {
-#if defined( REPLAY_ENABLED )
-	CReplayMessagePanel::RemoveAll();
-#endif
 }
 
 void ClientModeShared::DisplayReplayMessage( const char *pLocalizeName, float flDuration, bool bUrgent,
 											 const char *pSound, bool bDlg )
 {
-#if defined( REPLAY_ENABLED )
-	// Don't display during replay playback, and don't allow more than 4 at a time
-	const bool bInReplay = g_pEngineClientReplay->IsPlayingReplayDemo();
-	if ( bInReplay || ( !bDlg && CReplayMessagePanel::InstanceCount() >= 4 ) )
-		return;
-
-	// Use default duration?
-	if ( flDuration == -1.0f )
-	{
-		flDuration = replay_msgduration_misc.GetFloat();
-	}
-
-	// Display a replay message
-	if ( bDlg )
-	{
-		if ( engine->IsInGame() )
-		{
-			Panel *pPanel = new CReplayMessageDlg( pLocalizeName );
-			pPanel->SetVisible( true );
-			pPanel->MakePopup();
-			pPanel->MoveToFront();
-			pPanel->SetKeyBoardInputEnabled( true );
-			pPanel->SetMouseInputEnabled( true );
-#if defined( TF_CLIENT_DLL )
-			TFModalStack()->PushModal( pPanel );
-#endif
-		}
-		else
-		{
-			ShowMessageBox( "#Replay_GenericMsgTitle", pLocalizeName, "#GameUI_OK" );
-		}
-	}
-	else
-	{
-		CReplayMessagePanel *pMsgPanel = new CReplayMessagePanel( pLocalizeName, flDuration, bUrgent );
-		pMsgPanel->Show();
-	}
-
-	// Play a sound if appropriate
-	if ( pSound )
-	{
-		surface()->PlaySound( pSound );
-	}
-#endif
 }
 
 void ClientModeShared::DisplayReplayReminder()
 {
-#if defined( REPLAY_ENABLED )
-	if ( m_pReplayReminderPanel && g_pReplay->IsRecording() )
-	{
-		// Only display the panel if we haven't already requested a replay for the given life
-		CReplay *pCurLifeReplay = static_cast< CReplay * >( g_pClientReplayContext->GetReplayManager()->GetReplayForCurrentLife() );
-		if ( pCurLifeReplay && !pCurLifeReplay->m_bRequestedByUser && !pCurLifeReplay->m_bSaved )
-		{
-			m_pReplayReminderPanel->Show();
-		}
-	}
-#endif
 }
 
 

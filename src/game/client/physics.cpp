@@ -153,14 +153,10 @@ bool PhysicsDLLInit( CreateInterfaceFn physicsFactory )
 	return true;
 }
 
-#define DEFAULT_XBOX_CLIENT_VPHYSICS_TICK	0.025		// 25ms ticks on xbox ragdolls
 void PhysicsLevelInit( void )
 {
 	physenv = physics->CreateEnvironment();
 	assert( physenv );
-#ifdef PORTAL
-	physenv_main = physenv;
-#endif
 	{
 	MEM_ALLOC_CREDIT();
 	g_EntityCollisionHash = physics->CreateObjectPairHash();

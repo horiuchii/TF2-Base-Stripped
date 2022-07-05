@@ -73,9 +73,7 @@ static Vector WALL_MAX(WALL_OFFSET,WALL_OFFSET,WALL_OFFSET);
 bool CommentaryModeShouldSwallowInput( C_BasePlayer *pPlayer );
 
 extern ConVar default_fov;
-#ifndef _XBOX
 extern ConVar sensitivity;
-#endif
 
 static C_BasePlayer *s_pLocalPlayer = NULL;
 
@@ -91,17 +89,10 @@ static ConVar	cl_smoothtime	(
 	true, 2.0
 	 );
 
-#ifdef CSTRIKE_DLL
-ConVar	spec_freeze_time( "spec_freeze_time", "5.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
-ConVar	spec_freeze_traveltime( "spec_freeze_traveltime", "0.7", FCVAR_CHEAT | FCVAR_REPLICATED, "Time taken to zoom in to frame a target in observer freeze cam.", true, 0.01, false, 0 );
-ConVar	spec_freeze_distance_min( "spec_freeze_distance_min", "80", FCVAR_CHEAT, "Minimum random distance from the target to stop when framing them in observer freeze cam." );
-ConVar	spec_freeze_distance_max( "spec_freeze_distance_max", "90", FCVAR_CHEAT, "Maximum random distance from the target to stop when framing them in observer freeze cam." );
-#else
 ConVar	spec_freeze_time( "spec_freeze_time", "4.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
 ConVar	spec_freeze_traveltime( "spec_freeze_traveltime", "0.4", FCVAR_CHEAT | FCVAR_REPLICATED, "Time taken to zoom in to frame a target in observer freeze cam.", true, 0.01, false, 0 );
 ConVar	spec_freeze_distance_min( "spec_freeze_distance_min", "96", FCVAR_CHEAT, "Minimum random distance from the target to stop when framing them in observer freeze cam." );
 ConVar	spec_freeze_distance_max( "spec_freeze_distance_max", "200", FCVAR_CHEAT, "Maximum random distance from the target to stop when framing them in observer freeze cam." );
-#endif
 
 static ConVar	cl_first_person_uses_world_model ( "cl_first_person_uses_world_model", "0", FCVAR_ARCHIVE, "Causes the third person model to be drawn instead of the view model" );
 
@@ -497,18 +488,10 @@ bool C_BasePlayer::IsReplay() const
 
 CBaseEntity	*C_BasePlayer::GetObserverTarget() const	// returns players target or NULL
 {
-#ifndef _XBOX
 	if ( IsHLTV() )
 	{
 		return HLTVCamera()->GetPrimaryTarget();
 	}
-#if defined( REPLAY_ENABLED )
-	if ( IsReplay() )
-	{
-		return ReplayCamera()->GetPrimaryTarget();
-	}
-#endif
-#endif
 	
 	if ( GetObserverMode() == OBS_MODE_ROAMING )
 	{
@@ -598,18 +581,10 @@ void C_BasePlayer::SetObserverMode ( int iNewMode )
 
 int C_BasePlayer::GetObserverMode() const 
 { 
-#ifndef _XBOX
 	if ( IsHLTV() )
 	{
 		return HLTVCamera()->GetMode();
 	}
-#if defined( REPLAY_ENABLED )
-	if ( IsReplay() )
-	{
-		return ReplayCamera()->GetMode();
-	}
-#endif
-#endif
 
 	if ( IsLocalPlayer() && UseVR() )
 	{
@@ -1141,9 +1116,7 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 	}
 	else 
 	{
-#ifndef _X360
 		if ( joy_autosprint.GetBool() )
-#endif
 		{
 			if ( input->KeyState( &in_joyspeed ) != 0.0f )
 			{
@@ -1372,11 +1345,9 @@ bool C_BasePlayer::ShouldInterpolate()
 	// always interpolate myself
 	if ( IsLocalPlayer() )
 		return true;
-#ifndef _XBOX
 	// always interpolate entity if followed by HLTV
 	if ( HLTVCamera()->GetCameraMan() == this )
 		return true;
-#endif
 	return BaseClass::ShouldInterpolate();
 }
 
@@ -1388,14 +1359,10 @@ bool C_BasePlayer::ShouldDraw()
 
 int C_BasePlayer::DrawModel( int flags )
 {
-#ifndef PORTAL
-	// In Portal this check is already performed as part of
-	// C_Portal_Player::DrawModel()
 	if ( !ShouldDrawThisPlayer() )
 	{
 		return 0;
 	}
-#endif
 	return BaseClass::DrawModel( flags );
 }
 
@@ -2183,7 +2150,6 @@ Vector C_BasePlayer::GetAutoaimVector( float flScale )
 
 void C_BasePlayer::PlayPlayerJingle()
 {
-#ifndef _XBOX
 	// Find player sound for shooter
 	player_info_t info;
 	engine->GetPlayerInfo( entindex(), &info );
@@ -2228,7 +2194,6 @@ void C_BasePlayer::PlayPlayerJingle()
 	ep.m_SoundLevel = SNDLVL_NORM;
 
 	C_BaseEntity::EmitSound( filter, GetSoundSourceIndex(), ep );
-#endif
 }
 
 // Stuff for prediction

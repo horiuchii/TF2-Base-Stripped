@@ -29,7 +29,6 @@ class C_BaseCombatWeapon;
 class C_BaseViewModel;
 class C_FuncLadder;
 class CFlashlightEffect;
-class C_EconWearable;
 
 extern int g_nKillCamMode;
 extern int g_nKillCamTarget1;

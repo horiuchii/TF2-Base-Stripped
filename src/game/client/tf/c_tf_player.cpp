@@ -1095,7 +1095,6 @@ int C_TFPlayer::GetMaxHealth( void ) const
 //-----------------------------------------------------------------------------
 void C_TFPlayer::GetToolRecordingState( KeyValues *msg )
 {
-#ifndef _XBOX
 	BaseClass::GetToolRecordingState( msg );
 	BaseEntityRecordingState_t *pBaseEntityState = (BaseEntityRecordingState_t*)msg->GetPtr( "baseentity" );
 
@@ -1126,7 +1125,6 @@ void C_TFPlayer::GetToolRecordingState( KeyValues *msg )
 		//  is still able to render for just a bit.
 		pBaseEntityState->m_bRecordFinalVisibleSample = true;
 	}
-#endif
 }
 
 

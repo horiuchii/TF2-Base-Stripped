@@ -212,11 +212,9 @@ void VGui_CreateGlobalPanels( void )
 #endif
 	netgraphpanel->Create( toolParent );
 	debugoverlaypanel->Create( gameToolParent );
-
-#ifndef _X360
+	
 	// Create mp3 player off of tool parent panel
 	MP3Player_Create( toolParent );
-#endif
 #ifdef SIXENSE
 	g_pSixenseInput->CreateGUI( gameToolParent );
 #endif
@@ -226,9 +224,7 @@ void VGui_Shutdown()
 {
 	VGUI_DestroyClientDLLRootPanel();
 
-#ifndef _X360
 	MP3Player_Destroy();
-#endif
 
 	netgraphpanel->Destroy();
 	debugoverlaypanel->Destroy();
@@ -261,17 +257,13 @@ void VGui_PreRender()
 	VPROF( "VGui_PreRender" );
 	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
 
-	// 360 does not use these plaques
-	if ( IsPC() )
-	{
-		loadingdisc->SetLoadingVisible( engine->IsDrawingLoadingImage() && !engine->IsPlayingDemo() );
-#if !defined( TF_CLIENT_DLL )
-		loadingdisc->SetPausedVisible( !enginevgui->IsGameUIVisible() && cl_showpausedimage.GetBool() && engine->IsPaused() && !engine->IsTakingScreenshot() && !engine->IsPlayingDemo() );
-#else
-		bool bShowPausedImage = cl_showpausedimage.GetBool() && ( TFGameRules() && !TFGameRules()->IsInTraining() );
-		loadingdisc->SetPausedVisible( !enginevgui->IsGameUIVisible() && bShowPausedImage && engine->IsPaused() && !engine->IsTakingScreenshot() && !engine->IsPlayingDemo() );
-#endif
-	}
+	loadingdisc->SetLoadingVisible( engine->IsDrawingLoadingImage() && !engine->IsPlayingDemo() );
+	#if !defined( TF_CLIENT_DLL )
+	loadingdisc->SetPausedVisible( !enginevgui->IsGameUIVisible() && cl_showpausedimage.GetBool() && engine->IsPaused() && !engine->IsTakingScreenshot() && !engine->IsPlayingDemo() );
+	#else
+	bool bShowPausedImage = cl_showpausedimage.GetBool() && ( TFGameRules() && !TFGameRules()->IsInTraining() );
+	loadingdisc->SetPausedVisible( !enginevgui->IsGameUIVisible() && bShowPausedImage && engine->IsPaused() && !engine->IsTakingScreenshot() && !engine->IsPlayingDemo() );
+	#endif
 }
 
 void VGui_PostRender()

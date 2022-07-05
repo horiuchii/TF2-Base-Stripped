@@ -66,7 +66,7 @@ void CKeyRepeatHandler::KeyUp( vgui::KeyCode code )
 //-----------------------------------------------------------------------------
 vgui::KeyCode CKeyRepeatHandler::KeyRepeated( void )
 {
-	if ( IsPC() )
+	//if ( IsPC() )
 		return BUTTON_CODE_NONE;
 
 	if ( !m_bHaveKeyDown )

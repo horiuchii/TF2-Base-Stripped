@@ -530,7 +530,7 @@ void CHudWeaponSelection::PostChildPaint()
 
 								int shortcut = bFirstItem ? i + 1 : -1;
 
-								if ( IsPC() && shortcut >= 0 )
+								if ( shortcut >= 0 )
 								{
 									Color numberColor = m_NumberColor;
 									numberColor[3] *= m_flSelectionAlphaOverride / 255.0f;
@@ -687,7 +687,7 @@ void CHudWeaponSelection::DrawBox(int x, int y, int wide, int tall, Color color,
 	BaseClass::DrawBox( x, y, wide, tall, color, normalizedAlpha / 255.0f );
 
 	// draw the number
-	if ( IsPC() && number >= 0)
+	if ( number >= 0)
 	{
 		Color numberColor = m_NumberColor;
 		numberColor[3] *= normalizedAlpha / 255.0f;

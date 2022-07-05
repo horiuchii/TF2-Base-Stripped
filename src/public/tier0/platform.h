@@ -72,33 +72,22 @@
 #define IsDebug() false
 #endif
 
-// temporary, remove me
-#define IsPC() true
-
 #ifdef _WIN32
 	#define IsLinux() false
 	#define IsOSX() false
 	#define IsPosix() false
 	#define PLATFORM_WINDOWS 1 // Windows PC or Xbox 360
-	#ifndef _X360
-		#define IsWindows() true
-		#define IS_WINDOWS_PC
-		#define PLATFORM_WINDOWS_PC 1 // Windows PC
-		#ifdef _WIN64
-			#define IsPlatformWindowsPC64() true
-			#define IsPlatformWindowsPC32() false
-			#define PLATFORM_WINDOWS_PC64 1
-		#else
-			#define IsPlatformWindowsPC64() false
-			#define IsPlatformWindowsPC32() true
-			#define PLATFORM_WINDOWS_PC32 1
-		#endif
+	#define IsWindows() true
+	#define IS_WINDOWS_PC
+	#define PLATFORM_WINDOWS_PC 1 // Windows PC
+	#ifdef _WIN64
+		#define IsPlatformWindowsPC64() true
+		#define IsPlatformWindowsPC32() false
+		#define PLATFORM_WINDOWS_PC64 1
 	#else
-		#define PLATFORM_X360 1
-		#ifndef _CONSOLE
-			#define _CONSOLE
-		#endif
-		#define IsWindows() false
+		#define IsPlatformWindowsPC64() false
+		#define IsPlatformWindowsPC32() true
+		#define PLATFORM_WINDOWS_PC32 1
 	#endif
 	// Adding IsPlatformOpenGL() to help fix a bunch of code that was using IsPosix() to infer if the DX->GL translation layer was being used.
 	#if defined( DX_TO_GL_ABSTRACTION )
@@ -146,13 +135,6 @@ typedef signed char int8;
 		typedef unsigned __int32 uintp;
 	#endif
 
-	#if defined( _X360 )
-		#ifdef __m128
-			#undef __m128
-		#endif
-		#define __m128				__vector4
-	#endif
-
 	// Use this to specify that a function is an override of a virtual function.
 	// This lets the compiler catch cases where you meant to override a virtual
 	// function but you accidentally changed the function signature and created
@@ -195,16 +177,6 @@ typedef signed char int8;
 //-----------------------------------------------------------------------------
 // Set up platform type defines.
 //-----------------------------------------------------------------------------
-#if defined( PLATFORM_X360 ) || defined( _PS3 )
-	#if !defined( _GAMECONSOLE )
-		#define _GAMECONSOLE
-	#endif
-	#define IsPC()			false
-	#define IsGameConsole()	true
-#else
-	#define IsPC()			true
-	#define IsGameConsole()	false
-#endif
 
 #ifdef PLATFORM_64BITS
 	#define IsPlatform64Bits()	true

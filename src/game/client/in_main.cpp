@@ -744,7 +744,6 @@ void CInput::ClampAngles( QAngle& viewangles )
 		viewangles[PITCH] = -cl_pitchup.GetFloat();
 	}
 
-#ifndef PORTAL	// Don't constrain Roll in Portal because the player can be upside down! -Jeep
 	if ( viewangles[ROLL] > 50 )
 	{
 		viewangles[ROLL] = 50;
@@ -753,7 +752,6 @@ void CInput::ClampAngles( QAngle& viewangles )
 	{
 		viewangles[ROLL] = -50;
 	}
-#endif
 }
 
 /*
@@ -937,12 +935,9 @@ ControllerMove
 */
 void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 {
-	if ( IsPC() )
+	if ( !m_fCameraInterceptingMouse && m_fMouseActive )
 	{
-		if ( !m_fCameraInterceptingMouse && m_fMouseActive )
-		{
-			MouseMove( cmd);
-		}
+		MouseMove( cmd);
 	}
 
 	JoyStickMove( frametime, cmd);
@@ -956,18 +951,11 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 			haptics->MenuProcess();
 			return;
 		}
-#ifdef CSTRIKE_DLL
-		// NVNT cstrike fov grabing.
-		C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-		if(player){
-			haptics->UpdatePlayerFOV(player->GetFOV());
-		}
-#endif
 		// NVNT calculate move with the navigation on the haptics system.
 		haptics->CalculateMove(cmd->forwardmove, cmd->sidemove, frametime);
 		// NVNT send a game process to the haptics system.
 		haptics->GameProcess();
-#if defined( WIN32 ) && !defined( _X360 )
+#if defined( WIN32 )
 		// NVNT update our avatar effect.
 		UpdateAvatarEffect();
 #endif
@@ -1663,11 +1651,8 @@ void CInput::Init_All (void)
 	m_flLastForwardMove = 0.0;
 
 	// Initialize inputs
-	if ( IsPC() )
-	{
-		Init_Mouse ();
-		Init_Keyboard();
-	}
+	Init_Mouse ();
+	Init_Keyboard();
 		
 	// Initialize third person camera controls.
 	Init_Camera();

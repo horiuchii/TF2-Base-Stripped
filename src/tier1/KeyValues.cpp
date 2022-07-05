@@ -647,7 +647,7 @@ bool KeyValues::LoadFromFile( IBaseFileSystem *filesystem, const char *resourceN
 {
 	Assert(filesystem);
 #ifdef WIN32
-	Assert( IsPC() && _heapchk() == _HEAPOK );
+	Assert( _heapchk() == _HEAPOK );
 #endif
 
 #ifdef STAGING_ONLY
@@ -2191,12 +2191,6 @@ bool EvaluateConditional( const char *str )
 	bool bNot = false; // should we negate this command?
 	if ( *str == '!' )
 		bNot = true;
-
-	if ( Q_stristr( str, "$X360" ) )
-		return false ^ bNot;
-	
-	if ( Q_stristr( str, "$WIN32" ) )
-		return IsPC() ^ bNot; // hack hack - for now WIN32 really means IsPC
 
 	if ( Q_stristr( str, "$WINDOWS" ) )
 		return IsWindows() ^ bNot;

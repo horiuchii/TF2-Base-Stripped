@@ -10,7 +10,7 @@
 #include "rumble_shared.h"
 #include "inputsystem/iinputsystem.h"
 
-ConVar cl_rumblescale( "cl_rumblescale", "1.0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX, "Scale sensitivity of rumble effects (0 to 1.0)" ); 
+ConVar cl_rumblescale( "cl_rumblescale", "1.0", FCVAR_ARCHIVE, "Scale sensitivity of rumble effects (0 to 1.0)" ); 
 ConVar cl_debugrumble( "cl_debugrumble", "0", FCVAR_ARCHIVE, "Turn on rumble debugging spew" );
 
 #define MAX_RUMBLE_CHANNELS 3	// Max concurrent rumble effects
@@ -403,23 +403,6 @@ void CRumbleEffects::Init()
 	params.Set( 1, 1.0f, true, 0.0f, 0.3f );
 	GenerateFlatEffect( &m_Waveforms[RUMBLE_FALL_SHORT], params );
 	TerminateWaveform( &m_Waveforms[RUMBLE_FALL_SHORT], 2 );
-
-	// Portalgun left (blue) shot
-	params.Set( 1, 1.0f, true, 0.0f, 0.3f );
-	GenerateFlatEffect( &m_Waveforms[RUMBLE_PORTALGUN_LEFT], params );
-	TerminateWaveform( &m_Waveforms[RUMBLE_PORTALGUN_LEFT], 2 );
-
-	// Portalgun right (red) shot
-	params.Set( 1, 1.0f, false, 0.0f, 0.3f );
-	GenerateFlatEffect( &m_Waveforms[RUMBLE_PORTALGUN_RIGHT], params );
-	TerminateWaveform( &m_Waveforms[RUMBLE_PORTALGUN_RIGHT], 2 );
-
-	// Portal failed to place feedback
-	params.Set( 12, 1.0f, true, 0.0f, 1.0f );
-	GenerateSquareWaveEffect( &m_Waveforms[RUMBLE_PORTAL_PLACEMENT_FAILURE], params );
-	params.Set( 12, 1.0f, false, 0.0f, 1.0f );
-	GenerateSquareWaveEffect( &m_Waveforms[RUMBLE_PORTAL_PLACEMENT_FAILURE], params );
-	TerminateWaveform( &m_Waveforms[RUMBLE_PORTAL_PLACEMENT_FAILURE], 6 );
 }
 
 //---------------------------------------------------------

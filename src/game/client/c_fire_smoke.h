@@ -82,10 +82,6 @@ class C_FireFromAboveSprite : public C_Sprite
 	}
 };
 
-#ifdef _XBOX
-// XBox reduces the flame count
-#define	NUM_CHILD_FLAMES	1
-#else
 #define	NUM_CHILD_FLAMES	4
 #endif
 
@@ -298,5 +294,3 @@ protected:
 	void	CreateEffect( void );
 	void	StopEffect( void );
 };
-
-#endif //C_FIRE_SMOKE_H

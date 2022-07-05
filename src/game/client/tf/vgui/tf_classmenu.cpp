@@ -78,16 +78,11 @@ CTFClassMenu::CTFClassMenu( IViewPort *pViewPort ) : CClassMenu( pViewPort )
 	m_iClassMenuKey = BUTTON_CODE_INVALID;
 	m_iCurrentClassIndex = TF_CLASS_HEAVYWEAPONS;
 
-#ifdef _X360
-	m_pFooter = new CTFFooter( this, "Footer" );
-#endif
-
 	m_pClassInfoPanel = new CTFClassInfoPanel( this, "ClassInfoPanel" );
 	LoadControlSettings( "Resource/UI/ClassInfoPanel.res" );
 
 	Q_memset( m_pClassButtons, 0, sizeof( m_pClassButtons ) );
 
-#ifndef _X360
 	char tempName[MAX_PATH];
 	for ( int i = 0 ; i < CLASS_COUNT_IMAGES ; ++i )
 	{
@@ -96,7 +91,6 @@ CTFClassMenu::CTFClassMenu( IViewPort *pViewPort ) : CClassMenu( pViewPort )
 	}
 
 	m_pCountLabel = NULL;
-#endif
 
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 }
@@ -115,14 +109,12 @@ void CTFClassMenu::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
-#ifndef _X360
 	m_pCountLabel = dynamic_cast< CTFLabel * >( FindChildByName( "CountLabel" ) );
 
 	if ( m_pCountLabel )
 	{
 		m_pCountLabel->SizeToContents();
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -348,25 +340,11 @@ void CTFClassMenu::Update()
 	// Force them to pick a class if they haven't picked one yet.
 	if ( ( pLocalPlayer && pLocalPlayer->m_Shared.GetDesiredPlayerClassIndex() != TF_CLASS_UNDEFINED ) )
 	{
-#ifdef _X360
-		if ( m_pFooter )
-		{
-			m_pFooter->ShowButtonLabel( "cancel", true );
-		}
-#else
 		SetVisibleButton( "CancelButton", true );
-#endif
 	}
 	else
 	{
-#ifdef _X360
-		if ( m_pFooter )
-		{
-			m_pFooter->ShowButtonLabel( "cancel", false );
-		}
-#else
 		SetVisibleButton( "CancelButton", false );
-#endif
 	}
 }
 
@@ -413,7 +391,6 @@ void CTFClassMenu::OnTick( void )
 	if ( !IsVisible() )
 		return;
 
-#ifndef _X360
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
 	// Force them to pick a class if they haven't picked one yet.
@@ -423,8 +400,6 @@ void CTFClassMenu::OnTick( void )
 	}
 
 	UpdateClassCounts();
-
-#endif
 
 	BaseClass::OnTick();
 }
@@ -540,7 +515,6 @@ static int g_sClassDefines[] = {
 
 void CTFClassMenu::UpdateNumClassLabels( int iTeam )
 {
-#ifndef _X360
 	int nTotalCount = 0;
 
 	// count how many of each class there are
@@ -613,5 +587,4 @@ void CTFClassMenu::UpdateNumClassLabels( int iTeam )
 
 		nTotalCount++;
 	}
-#endif
 }

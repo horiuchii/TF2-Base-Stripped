@@ -31,12 +31,12 @@
 extern ISoundEmitterSystemBase *soundemitterbase;
 
 // Marked as FCVAR_USERINFO so that the server can cull CC messages before networking them down to us!!!
-ConVar closecaption( "closecaption", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX | FCVAR_USERINFO, "Enable close captioning." );
+ConVar closecaption( "closecaption", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Enable close captioning." );
 extern ConVar cc_lang;
 static ConVar cc_linger_time( "cc_linger_time", "1.0", FCVAR_ARCHIVE, "Close caption linger time." );
 static ConVar cc_predisplay_time( "cc_predisplay_time", "0.25", FCVAR_ARCHIVE, "Close caption delay before showing caption." );
 static ConVar cc_captiontrace( "cc_captiontrace", "1", 0, "Show missing closecaptions (0 = no, 1 = devconsole, 2 = show in hud)" );
-static ConVar cc_subtitles( "cc_subtitles", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX, "If set, don't show sound effect captions, just voice overs (i.e., won't help hearing impaired players)." );
+static ConVar cc_subtitles( "cc_subtitles", "0", FCVAR_ARCHIVE, "If set, don't show sound effect captions, just voice overs (i.e., won't help hearing impaired players)." );
 ConVar english( "english", "1", FCVAR_USERINFO, "If set to 1, running the english language set of assets." );
 static ConVar cc_smallfontlength( "cc_smallfontlength", "300", 0, "If text stream is this long, force usage of small font size." );
 
@@ -1575,16 +1575,9 @@ void CHudCloseCaption::CreateFonts( void )
 
 	m_hFonts[CCFONT_NORMAL] = pScheme->GetFont( "CloseCaption_Normal" );
 
-	if ( IsPC() )
-	{
-		m_hFonts[CCFONT_BOLD] = pScheme->GetFont( "CloseCaption_Bold" );
-		m_hFonts[CCFONT_ITALIC] = pScheme->GetFont( "CloseCaption_Italic" );
-		m_hFonts[CCFONT_ITALICBOLD] = pScheme->GetFont( "CloseCaption_BoldItalic" );
-	}
-	else
-	{
-		m_hFonts[CCFONT_SMALL] = pScheme->GetFont( "CloseCaption_Small" );
-	}
+	m_hFonts[CCFONT_BOLD] = pScheme->GetFont( "CloseCaption_Bold" );
+	m_hFonts[CCFONT_ITALIC] = pScheme->GetFont( "CloseCaption_Italic" );
+	m_hFonts[CCFONT_ITALICBOLD] = pScheme->GetFont( "CloseCaption_BoldItalic" );
 
 	m_nLineHeight = MAX( 6, vgui::surface()->GetFontTall( m_hFonts[ CCFONT_NORMAL ] ) );
 }
@@ -1695,7 +1688,7 @@ void CHudCloseCaption::ComputeStreamWork( int available_width, CCloseCaptionItem
 	WorkUnitParams params;
 
 	const wchar_t *curpos = item->GetStream();
-	int streamlen = wcslen( curpos );
+	//int streamlen = wcslen( curpos );
 	CUtlVector< Color > colorStack;
 
 	const wchar_t *most_recent_space = NULL;
@@ -1772,14 +1765,9 @@ void CHudCloseCaption::ComputeStreamWork( int available_width, CCloseCaptionItem
 		}
 
 		int font;
-		if ( IsPC() )
-		{
-			font = params.GetFontNumber();
-		}
-		else
-		{
-			font = streamlen >= cc_smallfontlength.GetInt() ? CCFONT_SMALL : CCFONT_NORMAL;
-		}
+
+		font = params.GetFontNumber();
+
 		vgui::HFont useF = m_hFonts[font];
 		params.font = useF;
 
@@ -2524,7 +2512,7 @@ void CHudCloseCaption::MsgFunc_CloseCaption(bf_read &msg)
 
 int CHudCloseCaption::GetFontNumber( bool bold, bool italic )
 {
-	if ( IsPC() && ( bold || italic ) )
+	if ( bold || italic )
 	{
 		if( bold && italic )
 		{
@@ -2867,18 +2855,15 @@ void CHudCloseCaption::FindSound( char const *pchANSI )
 					}
 				}
 
-				if ( IsPC() )
+				for ( int r = g_pVGuiLocalize->GetFirstStringIndex(); r != INVALID_LOCALIZE_STRING_INDEX; r = g_pVGuiLocalize->GetNextStringIndex( r ) )
 				{
-					for ( int r = g_pVGuiLocalize->GetFirstStringIndex(); r != INVALID_LOCALIZE_STRING_INDEX; r = g_pVGuiLocalize->GetNextStringIndex( r ) )
+					const char *strName = g_pVGuiLocalize->GetNameByIndex( r );
+
+					search.SetHash( strName );
+
+					if ( search.hash == lu.hash )
 					{
-						const char *strName = g_pVGuiLocalize->GetNameByIndex( r );
-
-						search.SetHash( strName );
-
-						if ( search.hash == lu.hash )
-						{
-							Msg( "    '%s' localization matches\n", strName );
-						}
+						Msg( "    '%s' localization matches\n", strName );
 					}
 				}
 			}

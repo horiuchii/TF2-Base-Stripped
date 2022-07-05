@@ -51,13 +51,9 @@ CTFMapInfoMenu::CTFMapInfoMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_MAPI
 
 	m_pTitle = new CTFLabel( this, "MapInfoTitle", " " );
 
-#ifdef _X360
-	m_pFooter = new CTFFooter( this, "Footer" );
-#else
 	m_pContinue = new CTFButton( this, "MapInfoContinue", "#TF_Continue" );
 	m_pBack = new CTFButton( this, "MapInfoBack", "#TF_Back" );
 	m_pIntro = new CTFButton( this, "MapInfoWatchIntro", "#TF_WatchIntro" );
-#endif
 
 	// info window about this map
 	m_pMapInfo = new CTFRichText( this, "MapInfoText" );
@@ -93,23 +89,13 @@ void CTFMapInfoMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 	Q_strncpy( m_szMapName, mapname, sizeof( m_szMapName ) );
 	Q_strupr( m_szMapName );
 
-#ifdef _X360
-	char *pExt = Q_stristr( m_szMapName, ".360" );
-	if ( pExt )
-	{
-		*pExt = '\0';
-	}
-#endif
-
 	LoadMapPage( m_szMapName );
 	SetMapTitle();
 
-#ifndef _X360
 	if ( m_pContinue )
 	{
 		m_pContinue->RequestFocus();
 	}
-#endif
 
 
 	if ( GameRules() )
@@ -169,31 +155,17 @@ void CTFMapInfoMenu::CheckIntroState()
 {
 	if ( CheckForIntroMovie() && HasViewedMovieForMap() )
 	{
-#ifdef _X360
-		if ( m_pFooter )
-		{
-			m_pFooter->ShowButtonLabel( "intro", true );
-		}
-#else
 		if ( m_pIntro && !m_pIntro->IsVisible() )
 		{
 			m_pIntro->SetVisible( true );
 		}
-#endif
 	}
 	else
 	{
-#ifdef _X360
-		if ( m_pFooter )
-		{
-			m_pFooter->ShowButtonLabel( "intro", false );
-		}
-#else
 		if ( m_pIntro && m_pIntro->IsVisible() )
 		{
 			m_pIntro->SetVisible( false );
 		}
-#endif
 	}
 }
 
@@ -202,7 +174,6 @@ void CTFMapInfoMenu::CheckIntroState()
 //-----------------------------------------------------------------------------
 void CTFMapInfoMenu::CheckBackContinueButtons()
 {
-#ifndef _X360
 	if ( m_pBack && m_pContinue )
 	{
 		if ( GetLocalPlayerTeam() == TEAM_UNASSIGNED )
@@ -216,7 +187,6 @@ void CTFMapInfoMenu::CheckBackContinueButtons()
 			m_pContinue->SetText( "#TF_Close" );
 		}
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------

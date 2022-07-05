@@ -57,12 +57,8 @@ CTFIntroMenu::CTFIntroMenu( IViewPort *pViewPort ) : CIntroMenu( pViewPort )
 	m_pModel = new CModelPanel( this, "MenuBG" );
 	m_pCaptionLabel = new CTFLabel( this, "VideoCaption", "" );
 
-#ifdef _X360
-	m_pFooter = new CTFFooter( this, "Footer" );
-#else
 	m_pBack = new CTFButton( this, "Back", "" );
-	m_pOK = new CTFButton( this, "Skip", "" );
-#endif
+	m_pOK = new CTFButton(this, "Skip", "");
 
 	m_iCurrentCaption = 0;
 	m_flVideoStartTime = 0;

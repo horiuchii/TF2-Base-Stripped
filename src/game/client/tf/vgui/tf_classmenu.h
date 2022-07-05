@@ -106,19 +106,12 @@ protected:
 	CTFClassInfoPanel *m_pClassInfoPanel;
 
 private:
-
-#ifdef _X360
-	CTFFooter		*m_pFooter;
-#endif
-
 	ButtonCode_t	m_iClassMenuKey;
 	int				m_iCurrentClassIndex;
 	vgui::CKeyRepeatHandler	m_KeyRepeat;
 
-#ifndef _X360
 	CTFImagePanel *m_ClassCountImages[CLASS_COUNT_IMAGES];
 	CTFLabel *m_pCountLabel;
-#endif
 };
 
 //-----------------------------------------------------------------------------

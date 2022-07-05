@@ -245,15 +245,6 @@ void RoundInfoOverlay::Update( const char *szMapName )
 	char strFullpath[MAX_PATH];
 	Q_strncpy( strFullpath, "resource/roundinfo/", MAX_PATH );	// Assume we must play out of the media directory
 	Q_strncat( strFullpath, szMapName, MAX_PATH );
-
-#ifdef _X360
-	char *pExt = Q_stristr( strFullpath, ".360" );
-	if ( pExt )
-	{
-		*pExt = '\0';
-	}
-#endif
-
 	Q_strncat( strFullpath, ".res", MAX_PATH );		// Assume we're a .res extension type
 
 	if ( g_pFullFileSystem->FileExists( strFullpath ), "MOD" )
@@ -428,11 +419,7 @@ CTFRoundInfo::CTFRoundInfo( IViewPort *pViewPort ) : Frame( NULL, PANEL_ROUNDINF
 	m_pTitle = new CTFLabel( this, "RoundTitle", " " );
 	m_pMapImage = new ImagePanel( this, "MapImage" );
 
-#ifdef _X360
-	m_pFooter = new CTFFooter( this, "Footer" );
-#else
 	m_pContinue = new CTFButton( this, "RoundContinue", "#TF_Continue" );
-#endif
 
 	m_pOverlay = new RoundInfoOverlay( this, "Overlay" );
 
@@ -551,12 +538,10 @@ void CTFRoundInfo::Update()
 		m_pOverlay->Update( szMapName );
 	}
 
-#ifndef _X360
 	if ( m_pContinue )
 	{
 		m_pContinue->RequestFocus();
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
