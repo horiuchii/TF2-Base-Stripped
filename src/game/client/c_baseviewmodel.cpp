@@ -18,7 +18,7 @@
 #include "tools/bonelist.h"
 #include <KeyValues.h>
 #include "hltvcamera.h"
-#if defined( TF_CLIENT_DLL ) || defined ( TF_MOD_CLIENT )
+#ifdef TF_CLIENT_DLL
 	#include "tf_weaponbase.h"
 #endif
 
@@ -39,7 +39,7 @@
 	ConVar cl_righthand( "cl_righthand", "1", FCVAR_ARCHIVE, "Use right-handed view models." );
 #endif
 
-#if defined( TF_CLIENT_DLL ) || defined ( TF_MOD_CLIENT )
+#ifdef TF_CLIENT_DLL
 	ConVar cl_flipviewmodels( "cl_flipviewmodels", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED, "Flip view models." );
 #endif
 
@@ -207,7 +207,7 @@ bool C_BaseViewModel::ShouldFlipViewModel()
 	}
 #endif
 
-#if defined( TF_CLIENT_DLL ) || defined ( TF_MOD_CLIENT )
+#ifdef TF_CLIENT_DLL
 	CBaseCombatWeapon *pWeapon = m_hWeapon.Get();
 	if ( pWeapon )
 	{

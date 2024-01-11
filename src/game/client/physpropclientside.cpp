@@ -749,7 +749,11 @@ CBaseEntity *BreakModelCreateSingle( CBaseEntity *pOwner, breakmodel_t *pModel, 
 	pEntity->m_nSkin = nSkin;
 	pEntity->m_iHealth = pModel->health;
 
-#if defined( TF_CLIENT_DLL ) || defined( TF_MOD_CLIENT ) || defined( DOD_DLL )
+#ifdef TF_CLIENT_DLL
+	pEntity->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+#endif
+
+#ifdef DOD_DLL
 	pEntity->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 #endif
 
