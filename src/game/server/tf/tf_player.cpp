@@ -663,11 +663,14 @@ void CTFPlayer::PrecachePlayerModels( void )
 			PrecacheGibsForModel( iModel );
 		}
 
-		// Precache the hardware facial morphed models as well.
-		const char *pszHWMModel = GetPlayerClassData( i )->m_szHWMModelName;
-		if ( pszHWMModel && pszHWMModel[0] )
+		if ( !IsX360() )
 		{
-			PrecacheModel( pszHWMModel );
+			// Precache the hardware facial morphed models as well.
+			const char *pszHWMModel = GetPlayerClassData( i )->m_szHWMModelName;
+			if ( pszHWMModel && pszHWMModel[0] )
+			{
+				PrecacheModel( pszHWMModel );
+			}
 		}
 	}
 	
@@ -1354,12 +1357,15 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinTeam_NoMenus( const char *pTeamName )
 {
+	Assert( IsX360() );
+
 	Msg( "Client command HandleCommand_JoinTeam_NoMenus: %s\n", pTeamName );
 
 	// Only expected to be used on the 360 when players leave the lobby to start a new game
 	if ( !IsInCommentaryMode() )
 	{
 		Assert( GetTeamNumber() == TEAM_UNASSIGNED );
+		Assert( IsX360() );
 	}
 
 	int iTeam = TEAM_SPECTATOR;
@@ -1728,6 +1734,14 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	}
 	else if ( FStrEq( pcmd, "jointeam_nomenus" ) )
 	{
+		if ( IsX360() )
+		{
+			if ( args.ArgC() >= 2 )
+			{
+				HandleCommand_JoinTeam_NoMenus( args[1] );
+			}
+			return true;
+		}
 		return false;
 	}
 	else if ( FStrEq( pcmd, "closedwelcomemenu" ) )
@@ -2047,6 +2061,7 @@ bool CTFPlayer::CanDisguise( void )
 
 	if ( HasItem() && GetItem()->GetItemID() == TF_ITEM_CAPTURE_FLAG )
 	{
+		HintMessage( HINT_CANNOT_DISGUISE_WITH_FLAG );
 		return false;
 	}
 
@@ -3764,15 +3779,22 @@ void CTFPlayer::StateEnterWELCOME( void )
 	}
 	else
 	{
-		KeyValues *data = new KeyValues( "data" );
-		data->SetString( "title", "#TF_Welcome" );	// info panel title
-		data->SetString( "type", "1" );				// show userdata from stringtable entry
-		data->SetString( "msg",	"motd" );			// use this stringtable entry
-		data->SetString( "cmd", "mapinfo" );		// exec this command if panel closed
+		if ( !IsX360() )
+		{
+			KeyValues *data = new KeyValues( "data" );
+			data->SetString( "title", "#TF_Welcome" );	// info panel title
+			data->SetString( "type", "1" );				// show userdata from stringtable entry
+			data->SetString( "msg",	"motd" );			// use this stringtable entry
+			data->SetString( "cmd", "mapinfo" );		// exec this command if panel closed
 
-		ShowViewPortPanel( PANEL_INFO, true, data );
+			ShowViewPortPanel( PANEL_INFO, true, data );
 
-		data->deleteThis();
+			data->deleteThis();
+		}
+		else
+		{
+			ShowViewPortPanel( PANEL_MAPINFO, true );
+		}
 
 		m_bSeenRoundInfo = false;
 	}

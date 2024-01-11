@@ -892,10 +892,17 @@ void BuildGroup::LoadControlSettings(const char *controlResourceName, const char
 
 		if ( bSuccess )
 		{
-			ConVarRef cl_hud_minmode( "cl_hud_minmode", true );
-			if ( cl_hud_minmode.IsValid() && cl_hud_minmode.GetBool() )
+			if ( IsX360() )
 			{
-				rDat->ProcessResolutionKeys( "_minmode" );
+				rDat->ProcessResolutionKeys( surface()->GetResolutionKey() );
+			}
+			if ( IsPC() )
+			{
+				ConVarRef cl_hud_minmode( "cl_hud_minmode", true );
+				if ( cl_hud_minmode.IsValid() && cl_hud_minmode.GetBool() )
+				{
+					rDat->ProcessResolutionKeys( "_minmode" );
+				}
 			}
 
 			if ( pConditions && pConditions->GetFirstSubKey() )

@@ -16,6 +16,8 @@
 #define CTFGrenadeLauncher C_TFGrenadeLauncher
 #endif
 
+#define TF_GRENADE_LAUNCHER_XBOX_CLIP 4
+
 //=============================================================================
 //
 // TF Weapon Grenade Launcher.

@@ -15,8 +15,14 @@
 #include "playerlocaldata.h"
 #include "PlayerState.h"
 #include "game/server/iplayerinfo.h"
+#include "hintsystem.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "util_shared.h"
+
+#if defined USES_ECON_ITEMS
+#include "game_item_schema.h"
+#include "econ_item_view.h"
+#endif
 
 // For queuing and processing usercmds
 class CCommandContext
@@ -639,6 +645,16 @@ public:
 	virtual void			UpdatePhysicsShadowToCurrentPosition();
 	void					UpdatePhysicsShadowToPosition( const Vector &vecAbsOrigin );
 	void					UpdateVPhysicsPosition( const Vector &position, const Vector &velocity, float secondsToArrival );
+
+	// Hint system
+	virtual CHintSystem		*Hints( void ) { return NULL; }
+	bool					ShouldShowHints( void ) { return Hints() ? Hints()->ShouldShowHints() : false; }
+	void					SetShowHints( bool bShowHints ) { if (Hints()) Hints()->SetShowHints( bShowHints ); }
+	bool 					HintMessage( int hint, bool bForce = false ) { return Hints() ? Hints()->HintMessage( hint, bForce ) : false; }
+	void 					HintMessage( const char *pMessage ) { if (Hints()) Hints()->HintMessage( pMessage ); }
+	void					StartHintTimer( int iHintID ) { if (Hints()) Hints()->StartHintTimer( iHintID ); }
+	void					StopHintTimer( int iHintID ) { if (Hints()) Hints()->StopHintTimer( iHintID ); }
+	void					RemoveHintTimer( int iHintID ) { if (Hints()) Hints()->RemoveHintTimer( iHintID ); }
 
 	// Accessor methods
 	int		FragCount() const		{ return m_iFrags; }

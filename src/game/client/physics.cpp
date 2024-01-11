@@ -149,14 +149,24 @@ bool PhysicsDLLInit( CreateInterfaceFn physicsFactory )
 	{
 		return false;
 	}
+
+	if ( IsX360() )
+	{
+		// Reduce timescale to save perf on 360
+		cl_phys_timescale.SetValue(0.9f);
+	}
 	PhysParseSurfaceData( physprops, filesystem );
 	return true;
 }
 
+#define DEFAULT_XBOX_CLIENT_VPHYSICS_TICK	0.025		// 25ms ticks on xbox ragdolls
 void PhysicsLevelInit( void )
 {
 	physenv = physics->CreateEnvironment();
 	assert( physenv );
+#ifdef PORTAL
+	physenv_main = physenv;
+#endif
 	{
 	MEM_ALLOC_CREDIT();
 	g_EntityCollisionHash = physics->CreateObjectPairHash();
@@ -167,7 +177,7 @@ void PhysicsLevelInit( void )
 	physenv->SetGravity( Vector(0, 0, -GetCurrentGravity() ) );
 	// 15 ms per tick
 	// NOTE: Always run client physics at this rate - helps keep ragdolls stable
-	physenv->SetSimulationTimestep( DEFAULT_TICK_INTERVAL );
+	physenv->SetSimulationTimestep( IsXbox() ? DEFAULT_XBOX_CLIENT_VPHYSICS_TICK : DEFAULT_TICK_INTERVAL );
 	physenv->SetCollisionEventHandler( &g_Collisions );
 	physenv->SetCollisionSolver( &g_Collisions );
 

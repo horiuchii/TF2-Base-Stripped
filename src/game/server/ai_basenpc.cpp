@@ -70,6 +70,11 @@
 #include "checksum_crc.h"
 #include "iservervehicle.h"
 #include "filters.h"
+#ifdef HL2_DLL
+#include "npc_bullseye.h"
+#include "hl2_player.h"
+#include "weapon_physcannon.h"
+#endif
 #include "waterbullet.h"
 #include "in_buttons.h"
 #include "eventlist.h"
@@ -81,6 +86,14 @@
 #include "death_pose.h"
 #include "datacache/imdlcache.h"
 #include "vstdlib/jobthread.h"
+
+#ifdef HL2_EPISODIC
+#include "npc_alyx_episodic.h"
+#endif
+
+#ifdef PORTAL
+	#include "prop_portal_shared.h"
+#endif
 
 #include "env_debughistory.h"
 #include "collisionutils.h"
@@ -129,7 +142,7 @@ ConVar  ai_debug_enemies( "ai_debug_enemies", "0" );
 ConVar	ai_rebalance_thinks( "ai_rebalance_thinks", "1" );
 ConVar	ai_use_efficiency( "ai_use_efficiency", "1" );
 ConVar	ai_use_frame_think_limits( "ai_use_frame_think_limits", "1" );
-ConVar	ai_default_efficient( "ai_default_efficient", "0" );
+ConVar	ai_default_efficient( "ai_default_efficient", ( IsX360() ) ? "1" : "0" );
 ConVar	ai_efficiency_override( "ai_efficiency_override", "0" );
 ConVar	ai_debug_efficiency( "ai_debug_efficiency", "0" );
 ConVar	ai_debug_dyninteractions( "ai_debug_dyninteractions", "0", FCVAR_NONE, "Debug the NPC dynamic interaction system." );
@@ -192,7 +205,7 @@ ConVar	ai_spread_pattern_focus_time( "ai_spread_pattern_focus_time","0.8" );
 ConVar	ai_reaction_delay_idle( "ai_reaction_delay_idle","0.3" );
 ConVar	ai_reaction_delay_alert( "ai_reaction_delay_alert", "0.1" );
 
-ConVar ai_strong_optimizations( "ai_strong_optimizations", "0" );
+ConVar ai_strong_optimizations( "ai_strong_optimizations", ( IsX360() ) ? "1" : "0" );
 bool AIStrongOpt( void )
 {
 	return ai_strong_optimizations.GetBool();
@@ -3677,7 +3690,7 @@ bool CAI_BaseNPC::PreNPCThink()
 #ifdef _DEBUG
 	const float NPC_THINK_LIMIT = 30.0 / 1000.0;
 #else
-	const float NPC_THINK_LIMIT = 10.0 / 1000.0;
+	const float NPC_THINK_LIMIT = ( !IsXbox() ) ? (10.0 / 1000.0) : (12.5 / 1000.0);
 #endif
 
 	g_StartTimeCurThink = 0;
@@ -9474,6 +9487,19 @@ Vector CAI_BaseNPC::GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy )
 
 		Vector vecEnemyOffset = pEnemy->BodyTarget( shootOrigin, bNoisy ) - pEnemy->GetAbsOrigin();
 
+#ifdef PORTAL
+		// Translate the enemy's position across the portals if it's only seen in the portal view cone
+		if ( !FInViewCone( vecEnemyLKP ) || !FVisible( vecEnemyLKP ) )
+		{
+			CProp_Portal *pPortal = FInViewConeThroughPortal( vecEnemyLKP );
+			if ( pPortal )
+			{
+				UTIL_Portal_VectorTransform( pPortal->m_hLinkedPortal->MatrixThisToLinked(), vecEnemyOffset, vecEnemyOffset );
+				UTIL_Portal_PointTransform( pPortal->m_hLinkedPortal->MatrixThisToLinked(), vecEnemyLKP, vecEnemyLKP );
+			}
+		}
+#endif
+
 		Vector retval = vecEnemyOffset + vecEnemyLKP - shootOrigin;
 		VectorNormalize( retval );
 		return retval;
@@ -9543,6 +9569,30 @@ Vector CAI_BaseNPC::GetActualShootPosition( const Vector &shootOrigin )
 	Vector vecEnemyLKP = GetEnemyLKP();
 	Vector vecEnemyOffset = GetEnemy()->BodyTarget( shootOrigin ) - GetEnemy()->GetAbsOrigin();
 	Vector vecTargetPosition = vecEnemyOffset + vecEnemyLKP;
+
+#ifdef PORTAL
+	// Check if it's also visible through portals
+	CProp_Portal *pPortal = FInViewConeThroughPortal( vecEnemyLKP );
+	if ( pPortal )
+	{
+		// Get the target's position through portals
+		Vector vecEnemyOffsetTransformed;
+		Vector vecEnemyLKPTransformed;
+		UTIL_Portal_VectorTransform( pPortal->m_hLinkedPortal->MatrixThisToLinked(), vecEnemyOffset, vecEnemyOffsetTransformed );
+		UTIL_Portal_PointTransform( pPortal->m_hLinkedPortal->MatrixThisToLinked(), vecEnemyLKP, vecEnemyLKPTransformed );
+		Vector vecTargetPositionTransformed = vecEnemyOffsetTransformed + vecEnemyLKPTransformed;
+
+		// Get the distance to the target with and without portals
+		float fDistanceToEnemyThroughPortalSqr = GetAbsOrigin().DistToSqr( vecTargetPositionTransformed );
+		float fDistanceToEnemySqr = GetAbsOrigin().DistToSqr( vecTargetPosition );
+
+		if ( fDistanceToEnemyThroughPortalSqr < fDistanceToEnemySqr || !FInViewCone( vecEnemyLKP ) || !FVisible( vecEnemyLKP ) )
+		{
+			// We're better off shooting through the portals
+			vecTargetPosition = vecTargetPositionTransformed;
+		}
+	}
+#endif
 
 	// lead for some fraction of a second.
 	return (vecTargetPosition + ( GetEnemy()->GetSmoothedVelocity() * ai_lead_time.GetFloat() ));

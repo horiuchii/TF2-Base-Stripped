@@ -21,6 +21,23 @@
 #define COMPILER_CLANG 1
 #endif
 
+#if defined( _X360 )
+	#define NO_STEAM
+	#define NO_VOICE
+	// for the 360, the ppc platform and the rtos are tightly coupled
+	// setup the 360 environment here !once! for much less leaf module include wackiness
+	// these are critical order and purposely appear *before* anything else
+	#define _XBOX
+#include <xtl.h>
+	#include <xaudio2.h>
+	#include <xbdm.h>
+#include <Xgraphics.h>
+	#include <xui.h>
+	#include <pmcpbsetup.h>
+#include <XMAHardwareAbstraction.h>
+	#undef _XBOX
+#endif
+
 #include "wchartypes.h"
 #include "basetypes.h"
 #include "tier0/valve_off.h"
@@ -72,22 +89,42 @@
 #define IsDebug() false
 #endif
 
+// Deprecating, infavor of IsX360() which will revert to IsXbox()
+// after confidence of xbox 1 code flush
+#define IsXbox()	false
+
 #ifdef _WIN32
 	#define IsLinux() false
 	#define IsOSX() false
 	#define IsPosix() false
 	#define PLATFORM_WINDOWS 1 // Windows PC or Xbox 360
-	#define IsWindows() true
-	#define IS_WINDOWS_PC
-	#define PLATFORM_WINDOWS_PC 1 // Windows PC
-	#ifdef _WIN64
-		#define IsPlatformWindowsPC64() true
-		#define IsPlatformWindowsPC32() false
-		#define PLATFORM_WINDOWS_PC64 1
+	#ifndef _X360
+		#define IsWindows() true
+		#define IsPC() true
+		#define IsConsole() false
+		#define IsX360() false
+		#define IsPS3() false
+		#define IS_WINDOWS_PC
+		#define PLATFORM_WINDOWS_PC 1 // Windows PC
+		#ifdef _WIN64
+			#define IsPlatformWindowsPC64() true
+			#define IsPlatformWindowsPC32() false
+			#define PLATFORM_WINDOWS_PC64 1
+		#else
+			#define IsPlatformWindowsPC64() false
+			#define IsPlatformWindowsPC32() true
+			#define PLATFORM_WINDOWS_PC32 1
+		#endif
 	#else
-		#define IsPlatformWindowsPC64() false
-		#define IsPlatformWindowsPC32() true
-		#define PLATFORM_WINDOWS_PC32 1
+		#define PLATFORM_X360 1
+		#ifndef _CONSOLE
+			#define _CONSOLE
+		#endif
+		#define IsWindows() false
+		#define IsPC() false
+		#define IsConsole() true
+		#define IsX360() true
+		#define IsPS3() false
 	#endif
 	// Adding IsPlatformOpenGL() to help fix a bunch of code that was using IsPosix() to infer if the DX->GL translation layer was being used.
 	#if defined( DX_TO_GL_ABSTRACTION )
@@ -96,7 +133,11 @@
 		#define IsPlatformOpenGL() false
 	#endif
 #elif defined(POSIX)
+	#define IsPC() true
 	#define IsWindows() false
+	#define IsConsole() false
+	#define IsX360() false
+	#define IsPS3() false
 	#if defined( LINUX )
 		#define IsLinux() true
 	#else
@@ -133,6 +174,13 @@ typedef signed char int8;
 	#else
 		typedef __int32 intp;
 		typedef unsigned __int32 uintp;
+	#endif
+
+	#if defined( _X360 )
+		#ifdef __m128
+			#undef __m128
+		#endif
+		#define __m128				__vector4
 	#endif
 
 	// Use this to specify that a function is an override of a virtual function.
@@ -177,6 +225,16 @@ typedef signed char int8;
 //-----------------------------------------------------------------------------
 // Set up platform type defines.
 //-----------------------------------------------------------------------------
+#if defined( PLATFORM_X360 ) || defined( _PS3 )
+	#if !defined( _GAMECONSOLE )
+		#define _GAMECONSOLE
+	#endif
+	#define IsPC()			false
+	#define IsGameConsole()	true
+#else
+	#define IsPC()			true
+	#define IsGameConsole()	false
+#endif
 
 #ifdef PLATFORM_64BITS
 	#define IsPlatform64Bits()	true
@@ -1283,8 +1341,7 @@ PLATFORM_INTERFACE bool Is64BitOS();
 
 inline const char *GetPlatformExt( void )
 {
-	//return IsX360() ? ".360" : "";
-	return "";
+	return IsX360() ? ".360" : "";
 }
 
 // flat view, 6 hw threads
@@ -1307,6 +1364,10 @@ inline const char *GetPlatformExt( void )
 // Include additional dependant header components.
 //-----------------------------------------------------------------------------
 #include "tier0/fasttimer.h"
+
+#if defined( _X360 )
+#include "xbox/xbox_core.h"
+#endif
 
 //-----------------------------------------------------------------------------
 // Methods to invoke the constructor, copy constructor, and destructor

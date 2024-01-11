@@ -389,9 +389,20 @@ void CTFStatPanel::WriteStats( void )
 		pClass->SetValue( "max", pMax );
 	}
 
+	if ( IsX360() )
+	{
+#ifdef _X360
+		if ( XBX_GetStorageDeviceId() == XBX_INVALID_STORAGE_ID || XBX_GetStorageDeviceId() == XBX_STORAGE_DECLINED )
+			return;
+#endif
+	}
+
 	char szFilename[_MAX_PATH];
 
-	Q_snprintf( szFilename, sizeof( szFilename ), "tf2_playerstats.dmx" );
+	if ( IsX360() )
+		Q_snprintf( szFilename, sizeof( szFilename ), "cfg:/tf2_playerstats.dmx" );
+	else
+		Q_snprintf( szFilename, sizeof( szFilename ), "tf2_playerstats.dmx" );
 
 	{
 		MEM_ALLOC_CREDIT();
@@ -403,6 +414,11 @@ void CTFStatPanel::WriteStats( void )
 	}
 
 	CleanupDMX( pPlayerStats );
+
+	if ( IsX360() )
+	{
+		xboxsystem->FinishContainerWrites();
+	}
 
 	m_bStatsChanged = false;
 }
@@ -416,9 +432,24 @@ bool CTFStatPanel::ReadStats( void )
 
 	DECLARE_DMX_CONTEXT();
 
+	if ( IsX360() )
+	{
+#ifdef _X360
+		if ( XBX_GetStorageDeviceId() == XBX_INVALID_STORAGE_ID || XBX_GetStorageDeviceId() == XBX_STORAGE_DECLINED )
+			return false;
+#endif
+	}
+
 	char	szFilename[_MAX_PATH];
 
-	Q_snprintf( szFilename, sizeof( szFilename ), "tf2_playerstats.dmx" );
+	if ( IsX360() )
+	{
+		Q_snprintf( szFilename, sizeof( szFilename ), "cfg:/tf2_playerstats.dmx" );
+	}
+	else
+	{
+		Q_snprintf( szFilename, sizeof( szFilename ), "tf2_playerstats.dmx" );
+	}
 
 	MEM_ALLOC_CREDIT();
 

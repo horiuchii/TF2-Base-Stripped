@@ -478,6 +478,7 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 	
 	enum ImageFormat indexImageFormat;
 	int indexImageSize;
+#ifndef _XBOX
 	float dummyGamma;
 	if( !TGALoader::GetInfo( m_pCamoPatternTextureVar->GetStringValue(), 
 		&m_CamoPatternWidth, &m_CamoPatternHeight, &indexImageFormat, &dummyGamma ) )
@@ -486,6 +487,12 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 		m_pCamoTextureVar = NULL;
 		return;
 	}
+#else
+	// xboxissue - no tga support, why implemented this way
+	Assert( 0 );
+	m_pCamoTextureVar = NULL;
+	return;
+#endif
 	
 	if( indexImageFormat != IMAGE_FORMAT_I8 )
 	{
@@ -506,6 +513,7 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 		return;
 	}
 	
+#ifndef _XBOX
 	if( !TGALoader::Load( m_pCamoPatternImage, m_pCamoPatternTextureVar->GetStringValue(),
 		m_CamoPatternWidth, m_CamoPatternHeight, IMAGE_FORMAT_I8, dummyGamma, false ) )
 	{
@@ -513,6 +521,10 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 		m_pCamoTextureVar = NULL;
 		return;
 	}
+#else
+	// xboxissue - no tga support, why is the camo done this way?
+	Assert( 0 );
+#endif
 	
 	bool colorUsed[256];
 	int colorRemap[256];

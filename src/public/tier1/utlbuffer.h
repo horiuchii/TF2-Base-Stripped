@@ -158,6 +158,8 @@ public:
 
 	FORCEINLINE void ActivateByteSwappingIfBigEndian( void )
 	{
+		if ( IsX360() )
+			ActivateByteSwapping( true );
 	}
 
 
@@ -648,9 +650,19 @@ inline void CUtlBuffer::GetTypeBin< float >( float &dest )
 	if ( CheckGet( sizeof( float ) ) )
 	{
 		uintptr_t pData = (uintptr_t)PeekGet();
-		// aligned read
-		dest = *(float *)pData;
-
+		if ( IsX360() && ( pData & 0x03 ) )
+		{
+			// handle unaligned read
+			((unsigned char*)&dest)[0] = ((unsigned char*)pData)[0];
+			((unsigned char*)&dest)[1] = ((unsigned char*)pData)[1];
+			((unsigned char*)&dest)[2] = ((unsigned char*)pData)[2];
+			((unsigned char*)&dest)[3] = ((unsigned char*)pData)[3];
+		}
+		else
+		{
+			// aligned read
+			dest = *(float *)pData;
+		}
 		if ( m_Byteswap.IsSwappingBytes() )
 		{
 			m_Byteswap.SwapBufferToTargetEndian< float >( &dest, &dest );

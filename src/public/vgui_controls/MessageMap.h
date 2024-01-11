@@ -128,7 +128,9 @@ struct MessageMapItem_t
 		return s_pMap;																	\
 	}
 
+#if !defined( _XBOX )
 #define VGUI_USEKEYBINDINGMAPS	1
+#endif
 
 #if defined( VGUI_USEKEYBINDINGMAPS )
 

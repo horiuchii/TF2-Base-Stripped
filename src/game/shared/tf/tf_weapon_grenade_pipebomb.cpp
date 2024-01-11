@@ -265,6 +265,7 @@ int CTFGrenadePipebombProjectile::DrawModel( int flags )
 #define TF_WEAPON_PIPEBOMB_MODEL		"models/weapons/w_models/w_stickybomb.mdl"
 #define TF_WEAPON_PIPEBOMB_BOUNCE_SOUND	"Weapon_Grenade_Pipebomb.Bounce"
 #define TF_WEAPON_GRENADE_DETONATE_TIME 2.0f
+#define TF_WEAPON_GRENADE_XBOX_DAMAGE 112
 
 BEGIN_DATADESC( CTFGrenadePipebombProjectile )
 END_DATADESC()
@@ -290,7 +291,13 @@ CTFGrenadePipebombProjectile* CTFGrenadePipebombProjectile::Create( const Vector
 		DispatchSpawn( pGrenade );
 
 		pGrenade->InitGrenade( velocity, angVelocity, pOwner, weaponInfo );
-		
+
+#ifdef _X360 
+		if ( pGrenade->m_iType != TF_GL_MODE_REMOTE_DETONATE )
+		{
+			pGrenade->SetDamage( TF_WEAPON_GRENADE_XBOX_DAMAGE );
+		}
+#endif
 		pGrenade->m_flFullDamage = pGrenade->GetDamage();
 
 		if ( pGrenade->m_iType != TF_GL_MODE_REMOTE_DETONATE )

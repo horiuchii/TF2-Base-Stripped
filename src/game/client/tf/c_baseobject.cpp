@@ -688,6 +688,43 @@ void C_BaseObject::RecalculateIDString( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Player has waved his crosshair over this entity. Display appropriate hints.
+//-----------------------------------------------------------------------------
+void C_BaseObject::DisplayHintTo( C_BasePlayer *pPlayer )
+{
+	bool bHintPlayed = false;
+
+	C_TFPlayer *pTFPlayer = ToTFPlayer(pPlayer);
+	if ( InSameTeam( pPlayer ) )
+	{
+		// We're looking at a friendly object. 
+
+		if ( HasSapper() )
+		{
+			bHintPlayed = pPlayer->HintMessage( HINT_OBJECT_HAS_SAPPER, true, true );
+		}
+
+		if ( pTFPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) )
+		{
+			// I'm an engineer.
+
+			// If I'm looking at a constructing object, let me know I can help build it (but not 
+			// if I built it myself, since I've already got that hint from the wrench).
+			if ( !bHintPlayed && IsBuilding() && GetBuilder() != pTFPlayer )
+			{
+				bHintPlayed = pPlayer->HintMessage( HINT_ENGINEER_USE_WRENCH_ONOTHER, false, true );
+			}
+
+			// If it's damaged, I can repair it
+			if ( !bHintPlayed && !IsBuilding() && GetHealth() < GetMaxHealth() )
+			{
+				bHintPlayed = pPlayer->HintMessage( HINT_ENGINEER_REPAIR_OBJECT, false, true );
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Does this object have a sapper on it
 //-----------------------------------------------------------------------------
 bool C_BaseObject::HasSapper( void )

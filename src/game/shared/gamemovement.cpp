@@ -517,6 +517,7 @@ void CGameMovement::DiffPrint( char const *fmt, ... )
 
 #endif // !PREDICTION_ERROR_CHECK_LEVEL
 
+#ifndef _XBOX
 void COM_Log( const char *pszFile, const char *fmt, ...)
 {
 	va_list		argptr;
@@ -543,6 +544,7 @@ void COM_Log( const char *pszFile, const char *fmt, ...)
 		filesystem->Close(fp);
 	}
 }
+#endif
 
 #ifndef CLIENT_DLL
 //-----------------------------------------------------------------------------
@@ -1636,7 +1638,25 @@ void CGameMovement::Friction( void )
 		// Bleed off some speed, but if we have less than the bleed
 		//  threshold, bleed the threshold amount.
 
-		control = (speed < sv_stopspeed.GetFloat()) ? sv_stopspeed.GetFloat() : speed;
+		if ( IsX360() )
+		{
+			if( player->m_Local.m_bDucked )
+			{
+				control = (speed < sv_stopspeed.GetFloat()) ? sv_stopspeed.GetFloat() : speed;
+			}
+			else
+			{
+#if defined ( TF_DLL ) || defined ( TF_CLIENT_DLL ) || defined ( TF_MOD ) || defined ( TF_MOD_CLIENT )
+				control = (speed < sv_stopspeed.GetFloat()) ? sv_stopspeed.GetFloat() : speed;
+#else
+				control = (speed < sv_stopspeed.GetFloat()) ? (sv_stopspeed.GetFloat() * 2.0f) : speed;
+#endif
+			}
+		}
+		else
+		{
+			control = (speed < sv_stopspeed.GetFloat()) ? sv_stopspeed.GetFloat() : speed;
+		}
 
 		// Add the amount to the drop amount.
 		drop += control*friction*gpGlobals->frametime;
@@ -4345,6 +4365,18 @@ void CGameMovement::Duck( void )
 		// DUCK
 		if ( ( mv->m_nButtons & IN_DUCK ) || bDuckJump )
 		{
+// XBOX SERVER ONLY
+#if !defined(CLIENT_DLL)
+			if ( IsX360() && buttonsPressed & IN_DUCK )
+			{
+				// Hinting logic
+				if ( player->GetToggledDuckState() && player->m_nNumCrouches < NUM_CROUCH_HINTS )
+				{
+					UTIL_HudHintText( player, "#Valve_Hint_Crouch" );
+					player->m_nNumCrouches++;
+				}
+			}
+#endif
 			// Have the duck button pressed, but the player currently isn't in the duck position.
 			if ( ( buttonsPressed & IN_DUCK ) && !bInDuck && !bDuckJump && !bDuckJumpTime )
 			{

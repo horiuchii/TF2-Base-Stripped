@@ -76,8 +76,12 @@ private:
 	CModelPanel		*m_pModel;
 	CTFLabel		*m_pCaptionLabel;
 
+#ifdef _X360
+	CTFFooter		*m_pFooter;
+#else
 	CTFButton		*m_pBack;
 	CTFButton		*m_pOK;
+#endif
 
 	float			m_flActionThink;
 	int				m_iAction;

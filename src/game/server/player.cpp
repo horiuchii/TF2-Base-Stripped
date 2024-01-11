@@ -61,6 +61,7 @@
 #include "gamestats.h"
 #include "npcevent.h"
 #include "datacache/imdlcache.h"
+#include "hintsystem.h"
 #include "env_debughistory.h"
 #include "fogcontroller.h"
 #include "gameinterface.h"
@@ -68,6 +69,10 @@
 #include "dt_utlvector_send.h"
 #include "vote_controller.h"
 #include "ai_speech.h"
+
+#if defined USES_ECON_ITEMS
+#include "econ_wearable.h"
+#endif
 
 // NVNT haptic utils
 #include "haptics/haptic_utils.h"
@@ -1189,7 +1194,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 
-#if defined( WIN32 )
+#if defined( WIN32 ) && !defined( _X360 )
 	// NVNT if player's client has a haptic device send them a user message with the damage.
 	if(HasHaptics())
 		HapticsDamage(this,info);
@@ -1650,13 +1655,18 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	CSound *pSound;
 
+	if ( Hints() )
+	{
+		Hints()->ResetHintTimers();
+	}
+
 	g_pGameRules->PlayerKilled( this, info );
 
 	gamestats->Event_PlayerKilled( this, info );
 
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 
-#if defined( WIN32 )
+#if defined( WIN32 ) && !defined( _X360 )
 	// NVNT set the drag to zero in the case of underwater death.
 	HapticSetDrag(this,0);
 #endif
@@ -2539,6 +2549,7 @@ CBaseEntity * CBasePlayer::GetObserverTarget()
 
 void CBasePlayer::ObserverUse( bool bIsPressed )
 {
+#ifndef _XBOX
 	if ( !HLTVDirector()->IsActive() )
 		return;
 
@@ -2597,6 +2608,7 @@ void CBasePlayer::ObserverUse( bool bIsPressed )
 		return;
 
 	SetAbsOrigin( tr.endpos ); */
+#endif
 }
 
 void CBasePlayer::JumptoPosition(const Vector &origin, const QAngle &angles)
@@ -3820,6 +3832,11 @@ void CBasePlayer::PreThink(void)
 	if ( g_fGameOver || m_iPlayerLocked )
 		return;         // intermission or finale
 
+	if ( Hints() )
+	{
+		Hints()->Update();
+	}
+
 	ItemPreFrame( );
 	WaterMove();
 
@@ -4884,6 +4901,12 @@ void CBasePlayer::InitialSpawn( void )
 //-----------------------------------------------------------------------------
 void CBasePlayer::Spawn( void )
 {
+	// Needs to be done before weapons are given
+	if ( Hints() )
+	{
+		Hints()->ResetHints();
+	}
+
 	SetClassname( "player" );
 
 	// Shared spawning code..
@@ -6891,7 +6914,7 @@ bool CBasePlayer::ShouldAutoaim( void )
 		return false;
 
 	// autoaiming is only for easy and medium skill
-	return ( !g_pGameRules->IsSkillLevel(SKILL_HARD) );
+	return ( IsX360() || !g_pGameRules->IsSkillLevel(SKILL_HARD) );
 }
 
 //-----------------------------------------------------------------------------

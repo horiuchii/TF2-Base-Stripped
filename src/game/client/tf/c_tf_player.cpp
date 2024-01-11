@@ -1095,6 +1095,7 @@ int C_TFPlayer::GetMaxHealth( void ) const
 //-----------------------------------------------------------------------------
 void C_TFPlayer::GetToolRecordingState( KeyValues *msg )
 {
+#ifndef _XBOX
 	BaseClass::GetToolRecordingState( msg );
 	BaseEntityRecordingState_t *pBaseEntityState = (BaseEntityRecordingState_t*)msg->GetPtr( "baseentity" );
 
@@ -1125,6 +1126,7 @@ void C_TFPlayer::GetToolRecordingState( KeyValues *msg )
 		//  is still able to render for just a bit.
 		pBaseEntityState->m_bRecordFinalVisibleSample = true;
 	}
+#endif
 }
 
 
@@ -1307,6 +1309,29 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 			if ( event )
 			{
 				gameeventmanager->FireEventClientSide( event );
+			}
+			if ( IsX360() )
+			{
+				const char *pTeam = NULL;
+				switch( GetTeamNumber() )
+				{
+					case TF_TEAM_RED:
+						pTeam = "red";
+						break;
+
+					case TF_TEAM_BLUE:
+						pTeam = "blue";
+						break;
+
+					case TEAM_SPECTATOR:
+						pTeam = "spectate";
+						break;
+				}
+
+				if ( pTeam )
+				{
+					engine->ChangeTeam( pTeam );
+				}
 			}
 		}
 
@@ -2492,6 +2517,19 @@ void C_TFPlayer::UpdateIDTarget()
 		{
 			m_iIDEntIndex = pEntity->entindex();
 		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Display appropriate hints for the target we're looking at
+//-----------------------------------------------------------------------------
+void C_TFPlayer::DisplaysHintsForTarget( C_BaseEntity *pTarget )
+{
+	// If the entity provides hints, ask them if they have one for this player
+	ITargetIDProvidesHint *pHintInterface = dynamic_cast<ITargetIDProvidesHint*>(pTarget);
+	if ( pHintInterface )
+	{
+		pHintInterface->DisplayHintTo( this );
 	}
 }
 

@@ -48,7 +48,14 @@ void CTFFists::PrimaryAttack()
 
 	// Set the weapon usage mode - primary, secondary.
 	// reversed for 360 because the primary attack is on the right side of the controller
-	m_iWeaponMode = TF_WEAPON_PRIMARY_MODE;
+	if ( IsX360() )
+	{
+		m_iWeaponMode = TF_WEAPON_SECONDARY_MODE;
+	}
+	else
+	{
+		m_iWeaponMode = TF_WEAPON_PRIMARY_MODE;
+	}
 
 	Punch();
 }
@@ -62,7 +69,14 @@ void CTFFists::SecondaryAttack()
 		return;
 
 	// Set the weapon usage mode - primary, secondary.
-	m_iWeaponMode = TF_WEAPON_SECONDARY_MODE;
+	if ( IsX360() )
+	{
+		m_iWeaponMode = TF_WEAPON_PRIMARY_MODE;
+	}
+	else
+	{
+		m_iWeaponMode = TF_WEAPON_SECONDARY_MODE;
+	}
 
 	Punch();
 }

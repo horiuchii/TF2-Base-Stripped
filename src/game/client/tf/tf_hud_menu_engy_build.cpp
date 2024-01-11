@@ -76,7 +76,7 @@ CHudMenuEngyBuild::CHudMenuEngyBuild( const char *pElementName ) : CHudElement( 
 //-----------------------------------------------------------------------------
 void CHudMenuEngyBuild::ApplySchemeSettings( IScheme *pScheme )
 {
-	bool b360Style = ( tf_build_menu_controller_mode.GetBool() );
+	bool b360Style = ( IsConsole() || tf_build_menu_controller_mode.GetBool() );
 
 	// load control settings...
 
@@ -222,7 +222,7 @@ int	CHudMenuEngyBuild::HudElementKeyInput( int down, ButtonCode_t keynum, const 
 		return 1;
 	}
 
-	bool bController = ( keynum >= JOYSTICK_FIRST );
+	bool bController = ( IsConsole() || ( keynum >= JOYSTICK_FIRST ) );
 
 	if ( bController )
 	{
@@ -435,7 +435,7 @@ void CHudMenuEngyBuild::SetVisible( bool state )
 		// close the weapon selection menu
 		engine->ClientCmd( "cancelselect" );
 
-		bool bConsoleMode = ( tf_build_menu_controller_mode.GetBool() );
+		bool bConsoleMode = ( IsConsole() || tf_build_menu_controller_mode.GetBool() );
 
 		if ( bConsoleMode != m_bInConsoleMode )
 		{

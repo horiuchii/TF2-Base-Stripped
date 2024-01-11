@@ -51,6 +51,7 @@
 #include "posedebugger.h"
 #include "tier0/icommandline.h"
 #include "prediction.h"
+#include "replay/replay_ragdoll.h"
 #include "studio_stats.h"
 #include "tier1/callqueue.h"
 
@@ -721,7 +722,9 @@ C_BaseAnimating::C_BaseAnimating() :
 	m_flModelScale = 1.0f;
 
 	m_iEyeAttachment = 0;
-
+#ifdef _XBOX
+	m_iAccumulatedBoneMask = 0;
+#endif
 	m_pStudioHdr = NULL;
 	m_hStudioHdr = MDLHANDLE_INVALID;
 

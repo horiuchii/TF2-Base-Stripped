@@ -92,7 +92,7 @@ public:
 
 	virtual bool	VisibleInWeaponSelection( void )
 	{
-		if ( false
+		if ( IsConsole()
 #ifdef CLIENT_DLL
 			|| tf_build_menu_controller_mode.GetBool() 
 #endif 

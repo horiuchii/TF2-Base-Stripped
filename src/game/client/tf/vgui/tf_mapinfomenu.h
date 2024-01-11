@@ -63,9 +63,13 @@ protected:
 	CTFLabel			*m_pTitle;
 	CTFRichText			*m_pMapInfo;
 
+#ifdef _X360
+	CTFFooter			*m_pFooter;
+#else
 	CTFButton			*m_pContinue;
 	CTFButton			*m_pBack;
 	CTFButton			*m_pIntro;
+#endif
 
 	vgui::ImagePanel	*m_pMapImage;
 

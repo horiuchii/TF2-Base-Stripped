@@ -87,6 +87,22 @@
 #include "ihudlcd.h"
 #include "toolframework_client.h"
 #include "hltvcamera.h"
+#if defined( REPLAY_ENABLED )
+#include "replay/replaycamera.h"
+#include "replay/replay_ragdoll.h"
+#include "qlimits.h"
+#include "replay/replay.h"
+#include "replay/ireplaysystem.h"
+#include "replay/iclientreplay.h"
+#include "replay/ienginereplay.h"
+#include "replay/ireplaymanager.h"
+#include "replay/ireplayscreenshotmanager.h"
+#include "replay/iclientreplaycontext.h"
+#include "replay/vgui/replayconfirmquitdlg.h"
+#include "replay/vgui/replaybrowsermainpanel.h"
+#include "replay/vgui/replayinputpanel.h"
+#include "replay/vgui/replayperformanceeditor.h"
+#endif
 #include "vgui/ILocalize.h"
 #include "vgui/IVGui.h"
 #include "ixboxsystem.h"
@@ -96,6 +112,12 @@
 #include "matsys_controls/matsyscontrols.h"
 #include "gamestats.h"
 #include "particle_parse.h"
+#if defined( TF_CLIENT_DLL )
+#include "rtime.h"
+#include "tf_hud_disconnect_prompt.h"
+#include "../engine/audio/public/sound.h"
+#include "tf_shared_content_manager.h"
+#endif
 #include "clientsteamcontext.h"
 #include "renamed_recvtable_compat.h"
 #include "mouthinfo.h"
@@ -109,6 +131,23 @@
 #include "haptics/haptic_utils.h"
 #include "haptics/haptic_msgs.h"
 
+#if defined( TF_CLIENT_DLL )
+#include "abuse_report.h"
+#endif
+
+#ifdef USES_ECON_ITEMS
+#include "econ_item_system.h"
+#endif // USES_ECON_ITEMS
+
+#if defined( TF_CLIENT_DLL )
+#include "econ/tool_items/custom_texture_cache.h"
+
+#endif
+
+#ifdef WORKSHOP_IMPORT_ENABLED
+#include "fbxsystem/fbxsystem.h"
+#endif
+
 extern vgui::IInputInternal *g_InputInternal;
 
 //=============================================================================
@@ -121,6 +160,11 @@ extern vgui::IInputInternal *g_InputInternal;
 //=============================================================================
 // HPE_END
 //=============================================================================
+
+
+#ifdef PORTAL
+#include "PortalRender.h"
+#endif
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -230,6 +274,11 @@ INetworkStringTable *g_pStringTableMaterials = NULL;
 INetworkStringTable *g_pStringTableInfoPanel = NULL;
 INetworkStringTable *g_pStringTableClientSideChoreoScenes = NULL;
 INetworkStringTable *g_pStringTableServerMapCycle = NULL;
+
+#ifdef TF_CLIENT_DLL
+INetworkStringTable *g_pStringTableServerPopFiles = NULL;
+INetworkStringTable *g_pStringTableServerMapCycleMvM = NULL;
+#endif
 
 static CGlobalVarsBase dummyvars( true );
 // So stuff that might reference gpGlobals during DLL initialization won't have a NULL pointer.
@@ -875,16 +924,32 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		return false;
 	if ( (scenefilecache = (ISceneFileCache *)appSystemFactory( SCENE_FILE_CACHE_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
-	// TODO: This sucks. remove this shit under comment
-	if ( false && (xboxsystem = (IXboxSystem *)appSystemFactory( XBOXSYSTEM_INTERFACE_VERSION, NULL )) == NULL )
+	if ( IsX360() && (xboxsystem = (IXboxSystem *)appSystemFactory( XBOXSYSTEM_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
-	if ( false && (matchmaking = (IMatchmaking *)appSystemFactory( VENGINE_MATCHMAKING_VERSION, NULL )) == NULL )
+	if ( IsX360() && (matchmaking = (IMatchmaking *)appSystemFactory( VENGINE_MATCHMAKING_VERSION, NULL )) == NULL )
 		return false;
+#ifndef _XBOX
 	if ( ( gamestatsuploader = (IUploadGameStats *)appSystemFactory( INTERFACEVERSION_UPLOADGAMESTATS, NULL )) == NULL )
 		return false;
+#endif
+
+#if defined( REPLAY_ENABLED )
+	if ( IsPC() && (g_pEngineReplay = (IEngineReplay *)appSystemFactory( ENGINE_REPLAY_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( IsPC() && (g_pEngineClientReplay = (IEngineClientReplay *)appSystemFactory( ENGINE_REPLAY_CLIENT_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+#endif
 
 	if (!g_pMatSystemSurface)
 		return false;
+
+#ifdef WORKSHOP_IMPORT_ENABLED
+	if ( !ConnectDataModel( appSystemFactory ) )
+		return false;
+	if ( InitDataModel() != INIT_OK )
+		return false;
+	InitFbx();
+#endif
 
 	// it's ok if this is NULL. That just means the sourcevr.dll wasn't found
 	g_pSourceVR = (ISourceVirtualReality *)appSystemFactory(SOURCE_VIRTUAL_REALITY_INTERFACE_VERSION, NULL);
@@ -948,6 +1013,18 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	IGameSystem::Add( ClientSoundscapeSystem() );
 	IGameSystem::Add( PerfVisualBenchmark() );
 	IGameSystem::Add( MumbleSystem() );
+	
+	#if defined( TF_CLIENT_DLL )
+	IGameSystem::Add( CustomTextureToolCacheGameSystem() );
+	IGameSystem::Add( TFSharedContentManager() );
+	#endif
+
+#if defined( TF_CLIENT_DLL )
+	if ( g_AbuseReportMgr != NULL )
+	{
+		IGameSystem::Add( g_AbuseReportMgr );
+	}
+#endif
 
 #if defined( CLIENT_DLL ) && defined( COPY_CHECK_STRESSTEST )
 	IGameSystem::Add( GetPredictionCopyTester() );
@@ -1004,23 +1081,50 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	C_BaseAnimating::InitBoneSetupThreadPool();
 
-#if defined( WIN32 )
+#if defined( WIN32 ) && !defined( _X360 )
 	// NVNT connect haptics sytem
 	ConnectHaptics(appSystemFactory);
 #endif
+#ifndef _X360
 	HookHapticMessages(); // Always hook the messages
+#endif
 
 	return true;
 }
 
 bool CHLClient::ReplayInit( CreateInterfaceFn fnReplayFactory )
 {
+#if defined( REPLAY_ENABLED )
+	if ( !IsPC() )
+		return false;
+	if ( (g_pReplay = (IReplaySystem *)fnReplayFactory( REPLAY_INTERFACE_VERSION, NULL ) ) == NULL )
+		return false;
+	if ( (g_pClientReplayContext = g_pReplay->CL_GetContext()) == NULL )
+		return false;
+
+	return true;
+#else
 	return false;
+#endif
 }
 
 bool CHLClient::ReplayPostInit()
 {
+#if defined( REPLAY_ENABLED )
+	if ( ( g_pReplayManager = g_pClientReplayContext->GetReplayManager() ) == NULL )
+		return false;
+	if ( ( g_pReplayScreenshotManager = g_pClientReplayContext->GetScreenshotManager() ) == NULL )
+		return false;
+	if ( ( g_pReplayPerformanceManager = g_pClientReplayContext->GetPerformanceManager() ) == NULL )
+		return false;
+	if ( ( g_pReplayPerformanceController = g_pClientReplayContext->GetPerformanceController() ) == NULL )
+		return false;
+	if ( ( g_pReplayMovieManager = g_pClientReplayContext->GetMovieManager() ) == NULL )
+		return false;
+	return true;
+#else
 	return false;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1036,6 +1140,22 @@ void CHLClient::PostInit()
 #endif
 
 	g_ClientVirtualReality.StartupComplete();
+
+#ifdef HL1MP_CLIENT_DLL
+	if ( s_cl_load_hl1_content.GetBool() && steamapicontext && steamapicontext->SteamApps() )
+	{
+		char szPath[ MAX_PATH*2 ];
+		int ccFolder= steamapicontext->SteamApps()->GetAppInstallDir( 280, szPath, sizeof(szPath) );
+		if ( ccFolder > 0 )
+		{
+			V_AppendSlash( szPath, sizeof(szPath) );
+			V_strncat( szPath, "hl1", sizeof( szPath ) );
+
+			g_pFullFileSystem->AddSearchPath( szPath, "HL1" );
+			g_pFullFileSystem->AddSearchPath( szPath, "GAME" );
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1087,6 +1207,12 @@ void CHLClient::Shutdown( void )
 #ifndef NO_STEAM
 	ClientSteamContext().Shutdown();
 #endif
+
+#ifdef WORKSHOP_IMPORT_ENABLED
+	ShutdownDataModel();
+	DisconnectDataModel();
+	ShutdownFbx();
+#endif
 	
 	// This call disconnects the VGui libraries which we rely on later in the shutdown path, so don't do it
 //	DisconnectTier3Libraries( );
@@ -1096,7 +1222,7 @@ void CHLClient::Shutdown( void )
 
 	gameeventmanager = NULL;
 
-#if defined( WIN32 )
+#if defined( WIN32 ) && !defined( _X360 )
 	// NVNT Disconnect haptics system
 	DisconnectHaptics();
 #endif
@@ -1471,6 +1597,14 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 	IGameSystem::LevelInitPreEntityAllSystems(pMapName);
 
+#ifdef USES_ECON_ITEMS
+	GameItemSchema_t *pItemSchema = ItemSystem()->GetItemSchema();
+	if ( pItemSchema )
+	{
+		pItemSchema->BInitFromDelayedBuffer();
+	}
+#endif // USES_ECON_ITEMS
+
 	ResetWindspeed();
 
 #if !defined( NO_ENTITY_PREDICTION )
@@ -1529,6 +1663,11 @@ void CHLClient::ResetStringTablePointers()
 	g_pStringTableInfoPanel = NULL;
 	g_pStringTableClientSideChoreoScenes = NULL;
 	g_pStringTableServerMapCycle = NULL;
+
+#ifdef TF_CLIENT_DLL
+	g_pStringTableServerPopFiles = NULL;
+	g_pStringTableServerMapCycleMvM = NULL;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1582,11 +1721,25 @@ void CHLClient::LevelShutdown( void )
 
 	messagechars->Clear();
 
+#if !( defined( TF_CLIENT_DLL ) || defined( TF_MOD_CLIENT ) )
+	// don't want to do this for TF2 because we have particle systems in our
+	// character loadout screen that can be viewed when we're not connected to a server
+	g_pParticleSystemMgr->UncacheAllParticleSystems();
+#endif
 	UncacheAllMaterials();
 
+#ifdef _XBOX
+	ReleaseRenderTargets();
+#endif
 
 	// string tables are cleared on disconnect from a server, so reset our global pointers to NULL
 	ResetStringTablePointers();
+
+#if defined( REPLAY_ENABLED )
+	// Shutdown the ragdoll recorder
+	CReplayRagdollRecorder::Instance().Shutdown();
+	CReplayRagdollCache::Instance().Shutdown();
+#endif
 }
 
 
@@ -1741,6 +1894,16 @@ void CHLClient::InstallStringTableCallback( const char *tableName )
 	{
 		g_pStringTableServerMapCycle = networkstringtable->FindTable( tableName );
 	}
+#ifdef TF_CLIENT_DLL
+	else if ( !Q_strcasecmp( tableName, "ServerPopFiles" ) )
+	{
+		g_pStringTableServerPopFiles = networkstringtable->FindTable( tableName );
+	}
+	else if ( !Q_strcasecmp( tableName, "ServerMapCycleMvM" ) )
+	{
+		g_pStringTableServerMapCycleMvM = networkstringtable->FindTable( tableName );
+	}
+#endif
 
 	InstallStringTableCallback_GameRules();
 }
@@ -1941,6 +2104,10 @@ void OnRenderStart()
 	VPROF( "OnRenderStart" );
 	MDLCACHE_CRITICAL_SECTION();
 	MDLCACHE_COARSE_LOCK();
+
+#ifdef PORTAL
+	g_pPortalRender->UpdatePortalPixelVisibility(); //updating this one or two lines before querying again just isn't cutting it. Update as soon as it's cheap to do so.
+#endif
 
 	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
 	C_BaseEntity::SetAbsQueriesValid( false );

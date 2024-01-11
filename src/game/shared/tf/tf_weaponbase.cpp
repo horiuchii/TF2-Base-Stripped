@@ -337,6 +337,17 @@ const char *CTFWeaponBase::GetViewModel( int iViewModel ) const
 //-----------------------------------------------------------------------------
 void CTFWeaponBase::Drop( const Vector &vecVelocity )
 {
+#ifndef CLIENT_DLL
+	if ( m_iAltFireHint )
+	{
+		CBasePlayer *pPlayer = GetPlayerOwner();
+		if ( pPlayer )
+		{
+			pPlayer->StopHintTimer( m_iAltFireHint );
+		}
+	}
+#endif
+
 	BaseClass::Drop( vecVelocity );
 }
 
@@ -345,6 +356,17 @@ void CTFWeaponBase::Drop( const Vector &vecVelocity )
 //-----------------------------------------------------------------------------
 bool CTFWeaponBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
+#ifndef CLIENT_DLL
+	if ( m_iAltFireHint )
+	{
+		CBasePlayer *pPlayer = GetPlayerOwner();
+		if ( pPlayer )
+		{
+			pPlayer->StopHintTimer( m_iAltFireHint );
+		}
+	}
+#endif
+
 	return BaseClass::Holster( pSwitchingTo );
 }
 
@@ -353,6 +375,17 @@ bool CTFWeaponBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 //-----------------------------------------------------------------------------
 bool CTFWeaponBase::Deploy( void )
 {
+#ifndef CLIENT_DLL
+	if ( m_iAltFireHint )
+	{
+		CBasePlayer *pPlayer = GetPlayerOwner();
+		if ( pPlayer )
+		{
+			pPlayer->StartHintTimer( m_iAltFireHint );
+		}
+	}
+#endif
+
 	float flOriginalPrimaryAttack = m_flNextPrimaryAttack;
 
 	bool bDeploy = BaseClass::Deploy();

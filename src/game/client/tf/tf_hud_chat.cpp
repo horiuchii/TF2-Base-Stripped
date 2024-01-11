@@ -67,6 +67,9 @@ void CHudChatInputLine::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 {
+#if defined ( _X360 )
+	RegisterForRenderGroup( "mid" );
+#endif
 }
 
 void CHudChat::CreateChatInputLine( void )
@@ -77,8 +80,11 @@ void CHudChat::CreateChatInputLine( void )
 
 void CHudChat::CreateChatLines( void )
 {
+#ifndef _XBOX
 	m_ChatLine = new CHudChatLine( this, "ChatLine1" );
-	m_ChatLine->SetVisible( false );
+	m_ChatLine->SetVisible( false );		
+
+#endif
 }
 
 void CHudChat::Init( void )

@@ -1618,10 +1618,14 @@ bool CSceneEntity::GetSoundNameForPlayer( CChoreoEvent *event, CBasePlayer *play
 	CopySoundNameWithModifierToken( buf, event->GetParameters(), buflen, pchToken );
 
 	bool usingEnglish = true;
-	char const *cvarvalue = engine->GetClientConVarValue( player->entindex(), "english" );
-	if ( cvarvalue && *cvarvalue && Q_atoi( cvarvalue ) != 1 )
+	if ( !IsXbox() )
 	{
-		usingEnglish = false;
+		char const *cvarvalue = engine->GetClientConVarValue( player->entindex(), "english" );
+		if ( cvarvalue && *cvarvalue && Q_atoi( cvarvalue ) != 1 )
+		{
+			usingEnglish = false;
+		}
+
 	}
 
 	// This makes it like they are running in another language
@@ -4607,8 +4611,7 @@ void PrecacheInstancedScene( char const *pszScene )
 	{
 		// Scenes are sloppy and don't always exist.
 		// A scene that is not in the pre-built cache image, but on disk, is a true error.
-		//if ( developer.GetInt() && ( IsX360() && ( g_pFullFileSystem->GetDVDMode() != DVDMODE_STRICT ) && g_pFullFileSystem->FileExists( pszScene, "GAME" ) ) )
-		if (false)
+		if ( developer.GetInt() && ( IsX360() && ( g_pFullFileSystem->GetDVDMode() != DVDMODE_STRICT ) && g_pFullFileSystem->FileExists( pszScene, "GAME" ) ) )
 		{
 			Warning( "PrecacheInstancedScene: Missing scene '%s' from scene image cache.\nRebuild scene image cache!\n", pszScene );
 		}

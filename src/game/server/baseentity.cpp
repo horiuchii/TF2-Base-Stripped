@@ -412,7 +412,9 @@ CBaseEntity::CBaseEntity( bool bServerOnly )
 	}
 	NetworkProp()->MarkPVSInformationDirty();
 
+#ifndef _XBOX
 	AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2788,7 +2790,7 @@ bool CBaseEntity::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **p
 	Vector vecTargetOrigin = pEntity->EyePosition();
 
 	trace_t tr;
-	if ( ai_LOS_mode.GetBool() )
+	if ( !IsXbox() && ai_LOS_mode.GetBool() )
 	{
 		UTIL_TraceLine(vecLookerOrigin, vecTargetOrigin, traceMask, this, COLLISION_GROUP_NONE, &tr);
 	}
@@ -4588,6 +4590,11 @@ static CUtlCachedFileData< CModelSoundsCache > g_ModelSoundsCache( "modelsounds.
 
 void ClearModelSoundsCache()
 {
+	if ( IsX360() )
+	{
+		return;
+	}
+
 	g_ModelSoundsCache.Reload();
 }
 
@@ -4597,6 +4604,11 @@ void ClearModelSoundsCache()
 //-----------------------------------------------------------------------------
 bool ModelSoundsCacheInit()
 {
+	if ( IsX360() )
+	{
+		return true;
+	}
+
 	return g_ModelSoundsCache.Init();
 }
 
@@ -4605,6 +4617,11 @@ bool ModelSoundsCacheInit()
 //-----------------------------------------------------------------------------
 void ModelSoundsCacheShutdown()
 {
+	if ( IsX360() )
+	{
+		return;
+	}
+
 	g_ModelSoundsCache.Shutdown();
 }
 
@@ -4617,6 +4634,11 @@ public:
 	}
 	virtual void LevelInitPostEntity()
 	{
+		if ( IsX360() )
+		{
+			return;
+		}
+
 		if ( g_ModelSoundsCache.IsDirty() )
 		{
 			g_ModelSoundsCache.Save();
@@ -4624,6 +4646,15 @@ public:
 	}
 	virtual void LevelShutdownPostEntity()
 	{
+		if ( IsX360() )
+		{
+			// Unforunate that this table must persist through duration of level.
+			// It is the common case that PrecacheModel() still gets called (and needs this table),
+			// after LevelInitPostEntity, as PrecacheModel() redundantly precaches.
+			g_ModelSoundsSymbolHelper.RemoveAll();
+			return;
+		}
+
 		if ( g_ModelSoundsCache.IsDirty() )
 		{
 			g_ModelSoundsCache.Save();
@@ -4682,6 +4713,13 @@ static CWatchForModelAccess g_WatchForModels;
 //-----------------------------------------------------------------------------
 void CBaseEntity::PrecacheSoundHelper( const char *pName )
 {
+	if ( !IsX360() )
+	{
+		// 360 only
+		Assert( 0 );
+		return;
+	}
+
 	if ( !pName || !pName[0] )
 	{
 		return;
@@ -4709,35 +4747,38 @@ void CBaseEntity::PrecacheModelComponents( int nModelIndex )
 	}
 
 	// sounds
-	const char *name = modelinfo->GetModelName( pModel );
-	if ( !g_ModelSoundsCache.EntryExists( name ) )
+	if ( IsPC() )
 	{
-		char extension[ 8 ];
-		Q_ExtractFileExtension( name, extension, sizeof( extension ) );
+		const char *name = modelinfo->GetModelName( pModel );
+		if ( !g_ModelSoundsCache.EntryExists( name ) )
+		{
+			char extension[ 8 ];
+			Q_ExtractFileExtension( name, extension, sizeof( extension ) );
 
-		if ( Q_stristr( extension, "mdl" ) )
-		{
-			DevMsg( 2, "Late precache of %s, need to rebuild modelsounds.cache\n", name );
-		}
-		else
-		{
-			if ( !extension[ 0 ] )
+			if ( Q_stristr( extension, "mdl" ) )
 			{
-				Warning( "Precache of %s ambigious (no extension specified)\n", name );
+				DevMsg( 2, "Late precache of %s, need to rebuild modelsounds.cache\n", name );
 			}
 			else
 			{
-				Warning( "Late precache of %s (file missing?)\n", name );
+				if ( !extension[ 0 ] )
+				{
+					Warning( "Precache of %s ambigious (no extension specified)\n", name );
+				}
+				else
+				{
+					Warning( "Late precache of %s (file missing?)\n", name );
+				}
+				return;
 			}
-			return;
 		}
-	}
 
-	CModelSoundsCache *entry = g_ModelSoundsCache.Get( name );
-	Assert( entry );
-	if ( entry )
-	{
-		entry->PrecacheSoundList();
+		CModelSoundsCache *entry = g_ModelSoundsCache.Get( name );
+		Assert( entry );
+		if ( entry )
+		{
+			entry->PrecacheSoundList();
+		}
 	}
 
 	// particles
@@ -4790,6 +4831,68 @@ void CBaseEntity::PrecacheModelComponents( int nModelIndex )
 								PrecacheParticleSystem( token );
 							}
 							continue;
+						}
+					}
+
+					// 360 precaches the model sounds now at init time, the cost is now ~250 msecs worst case.
+					// The disk based solution was not needed. Now at runtime partly due to already crawling the sequences
+					// for the particles and the expensive part was redundant PrecacheScriptSound(), which is now prevented
+					// by a local symbol table.
+					if ( IsX360() )
+					{
+						switch ( pEvent->event )
+						{
+						default:
+							{
+								if ( ( pEvent->type & AE_TYPE_NEWEVENTSYSTEM ) && ( pEvent->event == AE_SV_PLAYSOUND ) )
+								{
+									PrecacheSoundHelper( pEvent->pszOptions() );
+								}
+							}
+							break;
+						case CL_EVENT_FOOTSTEP_LEFT:
+						case CL_EVENT_FOOTSTEP_RIGHT:
+							{
+								char soundname[256];
+								char const *options = pEvent->pszOptions();
+								if ( !options || !options[0] )
+								{
+									options = "NPC_CombineS";
+								}
+
+								Q_snprintf( soundname, sizeof( soundname ), "%s.RunFootstepLeft", options );
+								PrecacheSoundHelper( soundname );
+								Q_snprintf( soundname, sizeof( soundname ), "%s.RunFootstepRight", options );
+								PrecacheSoundHelper( soundname );
+								Q_snprintf( soundname, sizeof( soundname ), "%s.FootstepLeft", options );
+								PrecacheSoundHelper( soundname );
+								Q_snprintf( soundname, sizeof( soundname ), "%s.FootstepRight", options );
+								PrecacheSoundHelper( soundname );
+							}
+							break;
+						case AE_CL_PLAYSOUND:
+							{
+								if ( !( pEvent->type & AE_TYPE_CLIENT ) )
+									break;
+
+								if ( pEvent->pszOptions()[0] )
+								{
+									PrecacheSoundHelper( pEvent->pszOptions() );
+								}
+								else
+								{
+									Warning( "-- Error --:  empty soundname, .qc error on AE_CL_PLAYSOUND in model %s, sequence %s, animevent # %i\n", 
+										studioHdr.GetRenderHdr()->pszName(), seq.pszLabel(), j+1 );
+								}
+							}
+							break;
+						case CL_EVENT_SOUND:
+						case SCRIPT_EVENT_SOUND:
+						case SCRIPT_EVENT_SOUND_VOICE:
+							{
+								PrecacheSoundHelper( pEvent->pszOptions() );
+							}
+							break;
 						}
 					}
 				}
@@ -6883,13 +6986,26 @@ void CBaseEntity::RemoveRecipientsIfNotCloseCaptioning( CRecipientFilter& filter
 		CBasePlayer *player = static_cast< CBasePlayer * >( CBaseEntity::Instance( playerIndex ) );
 		if ( !player )
 			continue;
-
+#if !defined( _XBOX )
 		const char *cvarvalue = engine->GetClientConVarValue( playerIndex, "closecaption" );
 		Assert( cvarvalue );
 		if ( !cvarvalue[ 0 ] )
 			continue;
 
 		int value = atoi( cvarvalue );
+#else
+		static ConVar *s_pCloseCaption = NULL;
+		if ( !s_pCloseCaption )
+		{
+			s_pCloseCaption = cvar->FindVar( "closecaption" );
+			if ( !s_pCloseCaption )
+			{
+				Error( "XBOX couldn't find closecaption convar!!!" );
+			}
+		}
+
+		int value = s_pCloseCaption->GetInt();
+#endif
 		// No close captions?
 		if ( value == 0 )
 		{
@@ -7074,10 +7190,13 @@ bool CBaseEntity::SUB_AllowedToFade( void )
 			return false;
 	}
 
+	// on Xbox, allow these to fade out
+#ifndef _XBOX
 	CBasePlayer *pPlayer = ( AI_IsSinglePlayer() ) ? UTIL_GetLocalPlayer() : NULL;
 
 	if ( pPlayer && pPlayer->FInViewCone( this ) )
 		return false;
+#endif
 
 	return true;
 }

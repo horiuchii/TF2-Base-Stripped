@@ -2367,6 +2367,9 @@ bool CTFPlayer::CanAttack( void )
 
 	if ( m_Shared.GetStealthNoAttackExpireTime() > gpGlobals->curtime || m_Shared.InCond( TF_COND_STEALTHED ) )
 	{
+#ifdef CLIENT_DLL
+		HintMessage( HINT_CANNOT_ATTACK_WHILE_CLOAKED, true, true );
+#endif
 		return false;
 	}
 
@@ -2436,6 +2439,7 @@ bool CTFPlayer::CanGoInvisible( void )
 {
 	if ( HasItem() && GetItem()->GetItemID() == TF_ITEM_CAPTURE_FLAG )
 	{
+		HintMessage( HINT_CANNOT_CLOAK_WITH_FLAG );
 		return false;
 	}
 

@@ -96,6 +96,13 @@ static char *CopyString( const char *in )
 	return n;
 }
 
+#ifdef STAGING_ONLY
+ConVar tf_strict_mouse_up_events( "tf_strict_mouse_up_events", "0", FCVAR_ARCHIVE, "Only allow Mouse-Release events to happens on panels we also Mouse-Downed in" );
+#endif
+
+// Temporary convar to help debug why the MvMVictoryMannUpPanel TabContainer is sometimes way off to the left.
+ConVar tf_debug_tabcontainer( "tf_debug_tabcontainer", "0", FCVAR_HIDDEN, "Spew TabContainer dimensions." );
+
 #if defined( VGUI_USEDRAGDROP )
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1149,6 +1156,14 @@ void Panel::PaintTraverse( bool repaint, bool allowForce )
 
 	float oldAlphaMultiplier = surface()->DrawGetAlphaMultiplier();
 	float newAlphaMultiplier = oldAlphaMultiplier * m_flAlpha * 1.0f/255.0f;
+
+	if ( IsXbox() && !newAlphaMultiplier )
+	{
+		// xbox optimization not suitable for pc
+		// xbox panels are compliant and can early out and not traverse their children
+		// when they have no opacity
+		return;
+	}
 
 	if ( !repaint &&
 		 allowForce &&
@@ -2924,7 +2939,8 @@ void Panel::InternalSetCursor()
 void Panel::OnThink()
 {
 #if defined( VGUI_USEDRAGDROP )
-	if (m_pDragDrop->m_bDragEnabled &&
+	if ( IsPC() && 
+		m_pDragDrop->m_bDragEnabled &&
 		m_pDragDrop->m_bDragging &&
 		m_pDragDrop->m_bDragStarted )
 	{
@@ -3123,7 +3139,7 @@ void Panel::OnKeyCodeTyped(KeyCode keycode)
 	vgui::KeyCode code = GetBaseButtonCode( keycode );
 
 	// handle focus change
-	if ( IsConsoleStylePanel() )
+	if ( IsX360() || IsConsoleStylePanel() )
 	{
 		// eat these typed codes, will get handled in OnKeyCodePressed
 		switch ( code )
@@ -3522,7 +3538,7 @@ bool Panel::RequestFocusNext(VPANEL panel)
 void Panel::RequestFocus(int direction)
 {
 	// NOTE: This doesn't make any sense if we don't have keyboard input enabled
-	Assert( ( IsConsoleStylePanel() ) || IsKeyBoardInputEnabled() );
+	Assert( ( IsX360() || IsConsoleStylePanel() ) || IsKeyBoardInputEnabled() );
 	//	ivgui()->DPrintf2("RequestFocus(%s, %s)\n", GetName(), GetClassName());
 	OnRequestFocus(GetVPanel(), NULL);
 }
@@ -4442,6 +4458,13 @@ int Panel::ComputePos( const char *pszInput, int &nPos, const int& nSize, const 
 		}
 	}
 
+	if ( tf_debug_tabcontainer.GetBool() && !Q_stricmp( "TabContainer", GetName() ) )
+	{
+		Msg( "TabContainer nFlags:%x nPos:%d nParentSize:%d nPosDelta:%d nSize:%d GetParent:%p (%s) pszInput:'%s'\n",
+				nFlags, nPos, nParentSize, nPosDelta, nSize, GetParent(), GetParent() ? GetParent()->GetName() : "??",
+				pszInput ? pszInput : "??" );
+	}
+
 	return nFlags;
 }
 
@@ -4553,7 +4576,7 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 	excludeEdgeFromTitleSafe.width = 0;
 	excludeEdgeFromTitleSafe.height = 0;
 
-	if ( panel_test_title_safe.GetBool() )
+	if ( IsX360() || panel_test_title_safe.GetBool() )
 	{
 		// "usetitlesafe" "1" - required inner 90%
 		// "usetitlesafe" "2" - suggested inner 85%
@@ -5668,11 +5691,11 @@ void Panel::PreparePanelMap( PanelMap_t *panelMap )
 void Panel::OnDelete()
 {
 #ifdef WIN32
-	Assert( _heapchk() == _HEAPOK );
+	Assert( IsX360() || ( IsPC() && _heapchk() == _HEAPOK ) );
 #endif
 	delete this;
 #ifdef WIN32
-	Assert( _heapchk() == _HEAPOK );
+	Assert( IsX360() || ( IsPC() && _heapchk() == _HEAPOK ) );
 #endif
 }
 
@@ -7907,6 +7930,11 @@ Panel* Panel::NavigateBack()
 //-----------------------------------------------------------------------------
 void Panel::NavigateTo()
 {
+	if ( IsX360() )
+	{
+		RequestFocus( 0 );
+	}
+
 	CallParentFunction( new KeyValues( "OnNavigateTo", "panelName", GetName() ) );
 
 	Panel *target = GetNavToRelay();

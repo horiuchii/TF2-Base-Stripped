@@ -30,7 +30,7 @@ extern mstudioevent_t *GetEventIndexForSequence( mstudioseqdesc_t &seqdesc );
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class C_BaseObject : public C_BaseCombatCharacter, public IHasBuildPoints
+class C_BaseObject : public C_BaseCombatCharacter, public IHasBuildPoints, public ITargetIDProvidesHint
 {
 	DECLARE_CLASS( C_BaseObject, C_BaseCombatCharacter );
 public:
@@ -182,6 +182,10 @@ public:
 	virtual int			FindObjectOnBuildPoint( CBaseObject *pObject );
 
 	virtual bool TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
+
+// ITargetIDProvidesHint
+public:
+	virtual void		DisplayHintTo( C_BasePlayer *pPlayer );
 
 protected:
 	virtual void		UpdateDamageEffects( BuildingDamageLevel_t damageLevel ) {}	// default is no effects

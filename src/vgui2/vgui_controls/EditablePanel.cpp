@@ -728,7 +728,7 @@ FocusNavGroup &EditablePanel::GetFocusNavGroup()
 bool EditablePanel::RequestFocusNext(VPANEL panel)
 {
 	bool bRet = m_NavGroup.RequestFocusNext(panel);
-	if ( !bRet && IsConsoleStylePanel() )
+	if ( IsPC() && !bRet && IsConsoleStylePanel() )
 	{
 		NavigateDown();
 	}
@@ -741,7 +741,7 @@ bool EditablePanel::RequestFocusNext(VPANEL panel)
 bool EditablePanel::RequestFocusPrev(VPANEL panel)
 {
 	bool bRet = m_NavGroup.RequestFocusPrev(panel);
-	if ( !bRet && IsConsoleStylePanel() )
+	if ( IsPC() && !bRet && IsConsoleStylePanel() )
 	{
 		NavigateUp();
 	}

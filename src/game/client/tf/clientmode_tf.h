@@ -19,6 +19,10 @@ class CHudMenuEngyDestroy;
 class CHudMenuSpyDisguise;
 class CTFFreezePanel;
 
+#if defined( _X360 )
+class CTFClientScoreBoardDialog;
+#endif
+
 class ClientModeTFNormal : public ClientModeShared 
 {
 DECLARE_CLASS( ClientModeTFNormal, ClientModeShared );
@@ -63,6 +67,10 @@ private:
 	CHudMenuSpyDisguise *m_pMenuSpyDisguise;
 	CTFFreezePanel		*m_pFreezePanel;
 	IGameUI			*m_pGameUI;
+
+#if defined( _X360 )
+	CTFClientScoreBoardDialog	*m_pScoreboard;
+#endif
 };
 
 

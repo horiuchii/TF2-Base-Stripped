@@ -120,6 +120,11 @@ public:
 	bool			m_bCalculatedNoise;
 
 	float			m_flHDRColorScale;
+
+#ifdef PORTAL
+	bool m_bDrawInMainRender;
+	bool m_bDrawInPortalRender;
+#endif //#ifdef PORTAL
 };
 
 

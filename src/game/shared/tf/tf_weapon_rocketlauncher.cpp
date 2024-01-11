@@ -92,6 +92,39 @@ void CTFRocketLauncher::ItemPostFrame( void )
 		return;
 
 	BaseClass::ItemPostFrame();
+
+#ifdef GAME_DLL
+
+	if ( m_flShowReloadHintAt && m_flShowReloadHintAt < gpGlobals->curtime )
+	{
+		if ( Clip1() < GetMaxClip1() )
+		{
+			pOwner->HintMessage( HINT_SOLDIER_RPG_RELOAD );
+		}
+		m_flShowReloadHintAt = 0;
+	}
+
+	/*
+	Vector forward;
+	AngleVectors( pOwner->EyeAngles(), &forward );
+	trace_t tr;
+	CTraceFilterSimple filter( pOwner, COLLISION_GROUP_NONE );
+	UTIL_TraceLine( pOwner->EyePosition(), pOwner->EyePosition() + forward * 2000, MASK_SOLID, &filter, &tr );
+
+	if ( tr.m_pEnt &&
+		tr.m_pEnt->IsPlayer() &&
+		tr.m_pEnt->IsAlive() &&
+		tr.m_pEnt->GetTeamNumber() != pOwner->GetTeamNumber() )
+	{
+		m_bLockedOn = true;
+	}
+	else
+	{
+		m_bLockedOn = false;
+	}
+	*/
+
+#endif
 }
 
 //-----------------------------------------------------------------------------

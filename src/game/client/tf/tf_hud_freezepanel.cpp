@@ -604,6 +604,10 @@ void CTFFreezePanel::OnThink( void )
 //-----------------------------------------------------------------------------
 void CTFFreezePanel::ShowSnapshotPanelIn( float flTime )
 {
+#if defined (_X360 )
+	return;
+#endif
+
 	m_flShowSnapshotReminderAt = gpGlobals->curtime + flTime;
 }
 
@@ -706,6 +710,7 @@ void CTFFreezePanel::ShowNemesisPanel( bool bShow )
 {
 	m_pNemesisSubPanel->SetVisible( bShow );
 
+#ifndef _X360
 	if ( bShow )
 	{
 		vgui::Label *pLabel = dynamic_cast< vgui::Label *>( m_pNemesisSubPanel->FindChildByName( "NemesisLabel" ) );
@@ -738,6 +743,7 @@ void CTFFreezePanel::ShowNemesisPanel( bool bShow )
 			}
 		}
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -812,6 +818,7 @@ void CTFFreezePanelCallout::UpdateForGib( int iGib, int iCount )
 		}
 	}
 	
+#ifndef _X360
 	int wide, tall;
 	m_pGibLabel->GetContentSize( wide, tall );
 
@@ -853,6 +860,7 @@ void CTFFreezePanelCallout::UpdateForGib( int iGib, int iCount )
 			}
 		}
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

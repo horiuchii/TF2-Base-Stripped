@@ -45,6 +45,10 @@ static ConVar sv_snd_filter( "sv_snd_filter", "", FCVAR_REPLICATED, "Filters out
 extern ISoundEmitterSystemBase *soundemitterbase;
 static ConVar *g_pClosecaption = NULL;
 
+#ifdef _XBOX
+int LookupStringFromCloseCaptionToken( char const *token );
+const wchar_t *GetStringForIndex( int index );
+#endif
 static bool g_bPermitDirectSoundPrecache = false;
 
 #if !defined( CLIENT_DLL )
@@ -55,6 +59,11 @@ void ClearModelSoundsCache();
 
 void WaveTrace( char const *wavname, char const *funcname )
 {
+	if ( IsX360() && !IsDebug() )
+	{
+		return;
+	}
+
 	static CUtlSymbolTable s_WaveTrace;
 
 	// Make sure we only show the message once
@@ -263,7 +272,38 @@ public:
 
 		// Load in any map specific overrides
 		char scriptfile[ 512 ];
-
+#if defined( TF_CLIENT_DLL ) || defined( TF_DLL )
+		if( V_stristr( mapname, "mvm" ) )
+		{
+			V_strncpy( scriptfile, "scripts/mvm_level_sounds.txt", sizeof( scriptfile ) );
+			if ( filesystem->FileExists( "scripts/mvm_level_sounds.txt", "GAME" ) )
+			{
+				soundemitterbase->AddSoundOverrides( "scripts/mvm_level_sounds.txt" );
+			}
+			if ( filesystem->FileExists( "scripts/mvm_level_sound_tweaks.txt", "GAME" ) )
+			{
+				soundemitterbase->AddSoundOverrides( "scripts/mvm_level_sound_tweaks.txt" );
+ 			}
+			if ( filesystem->FileExists( "scripts/game_sounds_vo_mvm.txt", "GAME" ) )
+			{
+				soundemitterbase->AddSoundOverrides( "scripts/game_sounds_vo_mvm.txt", true );
+			}
+			if ( filesystem->FileExists( "scripts/game_sounds_vo_mvm_mighty.txt", "GAME" ) )
+			{
+				soundemitterbase->AddSoundOverrides( "scripts/game_sounds_vo_mvm_mighty.txt", true );
+			}
+			g_pTFPlayerClassDataMgr->AddAdditionalPlayerDeathSounds();
+		}
+		else
+		{
+			Q_StripExtension( mapname, scriptfile, sizeof( scriptfile ) );
+			Q_strncat( scriptfile, "_level_sounds.txt", sizeof( scriptfile ), COPY_ALL_CHARACTERS );
+			if ( filesystem->FileExists( scriptfile, "GAME" ) )
+			{
+				soundemitterbase->AddSoundOverrides( scriptfile );
+			}
+		}
+#else
 		Q_StripExtension( mapname, scriptfile, sizeof( scriptfile ) );
 		Q_strncat( scriptfile, "_level_sounds.txt", sizeof( scriptfile ), COPY_ALL_CHARACTERS );
 
@@ -271,6 +311,7 @@ public:
 		{
 			soundemitterbase->AddSoundOverrides( scriptfile );
 		}
+#endif
 
 #if !defined( CLIENT_DLL )
 		for ( int i=soundemitterbase->First(); i != soundemitterbase->InvalidIndex(); i=soundemitterbase->Next( i ) )
@@ -515,7 +556,7 @@ public:
 		{
 			EmitCloseCaption( filter, entindex, params, ep );
 		}
-#if defined( WIN32 )
+#if defined( WIN32 ) && !defined( _X360 )
 		// NVNT notify the haptics system of this sound
 		HapticProcessSound(ep.m_pSoundName, entindex);
 #endif
@@ -992,6 +1033,8 @@ CON_COMMAND_F( sv_soundemitter_flush, "Flushes the sounds.txt system (server onl
 
 #if !defined( CLIENT_DLL ) 
 
+#if !defined( _XBOX )
+
 CON_COMMAND_F( sv_soundemitter_filecheck, "Report missing wave files for sounds and game_sounds files.", FCVAR_DEVELOPMENTONLY )
 {
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
@@ -1040,6 +1083,7 @@ CON_COMMAND_F( sv_findsoundname, "Find sound names which reference the specified
 		}
 	}
 }
+#endif // !_XBOX
 
 #else
 void Playgamesound_f( const CCommand &args )
@@ -1455,7 +1499,7 @@ void CBaseEntity::EmitCloseCaption( IRecipientFilter& filter, int entindex, char
 //-----------------------------------------------------------------------------
 bool CBaseEntity::PrecacheSound( const char *name )
 {
-	if ( !g_bPermitDirectSoundPrecache )
+	if ( IsPC() && !g_bPermitDirectSoundPrecache )
 	{
 		Warning( "Direct precache of %s\n", name );
 	}

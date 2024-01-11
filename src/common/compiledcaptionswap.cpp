@@ -40,6 +40,12 @@ bool SwapClosecaptionFile( void *pData )
 
 	CompiledCaptionHeader_t *pHdr = (CompiledCaptionHeader_t*)pData;
 
+	if ( IsX360() )
+	{
+		// pre-swap file header
+		swap.SwapFieldsToTargetEndian( pHdr );
+	}
+
 	if ( pHdr->magic != COMPILED_CAPTION_FILEID || pHdr->version != COMPILED_CAPTION_VERSION )
 	{
 		// bad data
@@ -54,8 +60,11 @@ bool SwapClosecaptionFile( void *pData )
 	pData = (byte*)pHdr + pHdr->dataoffset;
 	swap.SwapBufferToTargetEndian( (wchar_t*)pData, (wchar_t*)pData, pHdr->numblocks * pHdr->blocksize / sizeof(wchar_t) );
 
-	// post-swap file header
-	swap.SwapFieldsToTargetEndian( pHdr );
+	if ( IsPC() )
+	{
+		// post-swap file header
+		swap.SwapFieldsToTargetEndian( pHdr );
+	}
 
 	return true;
 }

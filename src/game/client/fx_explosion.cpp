@@ -268,7 +268,14 @@ void C_BaseExplosionEffect::CreateCore( void )
 			{
 				pParticle->m_flLifetime = 0.0f;
 
+	#ifdef INVASION_CLIENT_DLL
+				pParticle->m_flDieTime	= random->RandomFloat( 0.5f, 1.0f );
+	#endif
+	#ifdef _XBOX
+				pParticle->m_flDieTime	= 1.0f;
+	#else
 				pParticle->m_flDieTime	= random->RandomFloat( 2.0f, 3.0f );
+	#endif
 
 				pParticle->m_vecVelocity.Random( -spread, spread );
 				pParticle->m_vecVelocity += ( m_vecDirection * random->RandomFloat( 1.0f, 6.0f ) );
@@ -307,6 +314,8 @@ void C_BaseExplosionEffect::CreateCore( void )
 		// Inner core
 		//
 
+#ifndef _XBOX
+
 		for ( i = 0; i < 8; i++ )
 		{
 			offset.Random( -16.0f, 16.0f );
@@ -318,7 +327,11 @@ void C_BaseExplosionEffect::CreateCore( void )
 			{
 				pParticle->m_flLifetime = 0.0f;
 
+	#ifdef INVASION_CLIENT_DLL
 				pParticle->m_flDieTime	= random->RandomFloat( 0.5f, 1.0f );
+	#else
+				pParticle->m_flDieTime	= random->RandomFloat( 0.5f, 1.0f );
+	#endif
 
 				pParticle->m_vecVelocity.Random( -spread, spread );
 				pParticle->m_vecVelocity += ( m_vecDirection * random->RandomFloat( 1.0f, 6.0f ) );
@@ -351,6 +364,7 @@ void C_BaseExplosionEffect::CreateCore( void )
 				pParticle->m_flRollDelta	= random->RandomFloat( -8.0f, 8.0f );
 			}
 		}
+#endif // !_XBOX
 
 		//
 		// Ground ring
@@ -361,7 +375,13 @@ void C_BaseExplosionEffect::CreateCore( void )
 
 		Vector	forward;
 
+#ifndef INVASION_CLIENT_DLL
+
+#ifndef _XBOX 
 		int	numRingSprites = 32;
+#else
+		int	numRingSprites = 8;
+#endif
 
 		float flIncr = (2*M_PI) / (float) numRingSprites; // Radians
 		float flYaw = 0.0f;
@@ -409,7 +429,10 @@ void C_BaseExplosionEffect::CreateCore( void )
 				pParticle->m_flRollDelta	= random->RandomFloat( -8.0f, 8.0f );
 			}
 		}
+#endif
 	}
+
+#ifndef _XBOX
 
 	//
 	// Embers
@@ -469,6 +492,7 @@ void C_BaseExplosionEffect::CreateCore( void )
 			pParticle->m_flRollDelta	= random->RandomFloat( -8.0f, 8.0f );
 		}
 	}
+#endif // !_XBOX
 
 	//
 	// Fireballs
@@ -479,7 +503,11 @@ void C_BaseExplosionEffect::CreateCore( void )
 		m_Material_FireCloud = pSimple->GetPMaterial( "effects/fire_cloud2" );
 	}
 
+#ifndef _XBOX
 	int numFireballs = 32;
+#else
+	int numFireballs = 16;
+#endif
 
 	for ( i = 0; i < numFireballs; i++ )
 	{
@@ -560,7 +588,11 @@ void C_BaseExplosionEffect::CreateDebris( void )
 	// Set our bbox, don't auto-calculate it!
 	pSparkEmitter->GetBinding().SetBBox( m_vecOrigin - Vector( 128, 128, 128 ), m_vecOrigin + Vector( 128, 128, 128 ) );
 
+#ifndef _XBOX
 	int		numSparks = random->RandomInt( 8, 16 );
+#else
+	int		numSparks = random->RandomInt( 2, 4 );
+#endif
 
 	Vector	dir;
 	float	spread = 1.0f;
@@ -590,6 +622,7 @@ void C_BaseExplosionEffect::CreateDebris( void )
 		Color32Init( tParticle->m_color, 255, 255, 255, 255 );
 	}
 
+#ifndef _XBOX
 	//
 	// Chunks
 	//
@@ -602,7 +635,12 @@ void C_BaseExplosionEffect::CreateDebris( void )
 	// Setup our collision information
 	fleckEmitter->m_ParticleCollision.Setup( m_vecOrigin, &m_vecDirection, 0.9f, 512, 1024, 800, 0.5f );
 	
+
+#ifdef _XBOX
+	int	numFlecks = random->RandomInt( 8, 16 );
+#else	
 	int	numFlecks = random->RandomInt( 16, 32 );
+#endif // _XBOX
 
 
 	// Dump out flecks
@@ -644,6 +682,7 @@ void C_BaseExplosionEffect::CreateDebris( void )
 		pParticle->m_uchColor[1] = MIN( 1.0f, 0.25f*colorRamp )*255.0f;
 		pParticle->m_uchColor[2] = MIN( 1.0f, 0.25f*colorRamp )*255.0f;
 	}
+#endif // !_XBOX
 }
 
 //-----------------------------------------------------------------------------
@@ -1125,6 +1164,8 @@ void C_WaterExplosionEffect::CreateMisc( void )
 
 	PMaterialHandle	hMaterial = ParticleMgr()->GetPMaterial( "effects/splash2" );
 
+#ifndef _XBOX
+
 	int		numDrops = 32;
 	float	length = 0.1f;
 	Vector	vForward, vRight, vUp;
@@ -1197,6 +1238,8 @@ void C_WaterExplosionEffect::CreateMisc( void )
 
 		FloatToColor32( tParticle->m_color, MIN( 1.0f, m_vecColor[0] * colorRamp ), MIN( 1.0f, m_vecColor[1] * colorRamp ), MIN( 1.0f, m_vecColor[2] * colorRamp ), m_flLuminosity );
 	}
+
+#endif
 
 	CSmartPtr<CSplashParticle> pSimple = CSplashParticle::Create( "splish" );
 	pSimple->SetSortOrigin( m_vecWaterSurface );

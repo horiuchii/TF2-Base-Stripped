@@ -60,6 +60,10 @@ public:
 	virtual void	OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 
+	// ITargetIDProvidesHint
+public:
+	virtual void	DisplayHintTo( C_BasePlayer *pPlayer );
+
 private:
 
 	void UpgradeLevelChanged();

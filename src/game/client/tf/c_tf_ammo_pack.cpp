@@ -13,7 +13,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-class C_TFAmmoPack : public C_BaseAnimating
+class C_TFAmmoPack : public C_BaseAnimating, public ITargetIDProvidesHint
 {
 	DECLARE_CLASS( C_TFAmmoPack, C_BaseAnimating );
 
@@ -28,6 +28,10 @@ public:
 	virtual bool	Interpolate( float currentTime );
 
 	virtual CStudioHdr *OnNewModel( void );
+
+	// ITargetIDProvidesHint
+public:
+	virtual void	DisplayHintTo( C_BasePlayer *pPlayer );
 
 private:
 
@@ -111,6 +115,23 @@ void C_TFAmmoPack::OnDataChanged( DataUpdateType_t updateType )
 bool C_TFAmmoPack::Interpolate( float currentTime )
 {
 	return BaseClass::Interpolate( currentTime );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pPlayer - 
+//-----------------------------------------------------------------------------
+void C_TFAmmoPack::DisplayHintTo( C_BasePlayer *pPlayer )
+{
+	C_TFPlayer *pTFPlayer = ToTFPlayer(pPlayer);
+	if ( pTFPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) )
+	{
+		pTFPlayer->HintMessage( HINT_ENGINEER_PICKUP_METAL );
+	}
+	else
+	{
+		pTFPlayer->HintMessage( HINT_PICKUP_AMMO );
+	}
 }
 
 CStudioHdr * C_TFAmmoPack::OnNewModel( void )

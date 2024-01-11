@@ -11,6 +11,9 @@
 #include "datacache/imdlcache.h"
 #include "utlvector.h"
 #include "vprof.h"
+#if defined( _X360 )
+#include "xbox/xbox_console.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -208,9 +211,18 @@ bool IGameSystem::InitAllSystems()
 		MDLCACHE_CRITICAL_SECTION();
 
 		IGameSystem *sys = s_GameSystems[i];
-		
+
+#if defined( _X360 )
+		char sz[128];
+		Q_snprintf( sz, sizeof( sz ), "%s->Init():Start", sys->Name() );
+		XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
 		bool valid = sys->Init();
 
+#if defined( _X360 )
+		Q_snprintf( sz, sizeof( sz ), "%s->Init():Finish", sys->Name() );
+		XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
 		if ( !valid )
 			return false;
 	}

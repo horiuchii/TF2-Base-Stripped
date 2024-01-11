@@ -125,7 +125,11 @@ CEnvProjectedTexture::CEnvProjectedTexture( void )
 	m_bCameraSpace = false;
 
 // if ( g_pHardwareConfig->SupportsBorderColor() )
-	Q_strcpy( m_SpotlightTextureName.GetForModify(), "effects/flashlight001" );
+#if defined( _X360 )
+		Q_strcpy( m_SpotlightTextureName.GetForModify(), "effects/flashlight_border" );
+#else
+		Q_strcpy( m_SpotlightTextureName.GetForModify(), "effects/flashlight001" );
+#endif
 
 	m_nSpotlightTextureFrame = 0;
 	m_LinearFloatLightColor.Init( 1.0f, 1.0f, 1.0f );

@@ -175,6 +175,26 @@ void TFViewport::ApplySchemeSettings( vgui::IScheme *pScheme )
 	gHUD.InitColors( pScheme );
 
 	SetPaintBackgroundEnabled( false );
+
+	// Precache some font characters for the 360
+ 	if ( IsX360() )
+ 	{
+ 		wchar_t *pAllChars = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.!:";
+ 		wchar_t *pNumbers = L"0123456789";
+ 
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "ScoreboardTeamName" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "ScoreboardMedium" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "ScoreboardSmall" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "ScoreboardVerySmall" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "TFFontMedium" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "TFFontSmall" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "HudFontMedium" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "HudFontMediumSmallSecondary" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "HudFontSmall" ), pAllChars );
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "DefaultSmall" ), pAllChars );
+ 
+ 		vgui::surface()->PrecacheFontCharacters( pScheme->GetFont( "ScoreboardTeamScore" ), pNumbers );
+ 	}
 }
 
 //
@@ -255,6 +275,11 @@ void TFViewport::CreateDefaultPanels( void )
 int TFViewport::GetDeathMessageStartHeight( void )
 {
 	int y = YRES(2);
+
+	if ( IsX360() )
+	{
+		y = YRES(36);
+	}
 
 	if ( g_pSpectatorGUI && g_pSpectatorGUI->IsVisible() )
 	{

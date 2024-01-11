@@ -10,6 +10,7 @@
 #include "vgui/ILocalize.h"
 #include "tf_fx_muzzleflash.h"
 #include "eventlist.h"
+#include "hintsystem.h"
 #include <vgui_controls/ProgressBar.h>
 #include "igameevents.h"
 
@@ -183,6 +184,40 @@ void C_ObjectSentrygun::GetStatusText( wchar_t *pStatus, int iMaxStatusLen )
 				wszShells,
 				wszRockets );
 		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_ObjectSentrygun::DisplayHintTo( C_BasePlayer *pPlayer )
+{
+	bool bHintPlayed = false;
+
+	C_TFPlayer *pTFPlayer = ToTFPlayer(pPlayer);
+	if ( InSameTeam( pPlayer ) )
+	{
+		// We're looking at a friendly object. 
+		if ( pTFPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) )
+		{
+			// If the sentrygun can be upgraded, and I can afford it, let me know
+			if ( GetHealth() == GetMaxHealth() && GetUpgradeLevel() < 3 )
+			{
+				if ( pTFPlayer->GetBuildResources() >= SENTRYGUN_UPGRADE_COST )
+				{
+					bHintPlayed = pTFPlayer->HintMessage( HINT_ENGINEER_UPGRADE_SENTRYGUN, false, true );
+				}
+				else
+				{
+					bHintPlayed = pTFPlayer->HintMessage( HINT_ENGINEER_METAL_TO_UPGRADE, false, true );
+				}
+			}
+		}
+	}
+
+	if ( !bHintPlayed )
+	{
+		BaseClass::DisplayHintTo( pPlayer );
 	}
 }
 

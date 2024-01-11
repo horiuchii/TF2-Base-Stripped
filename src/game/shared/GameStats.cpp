@@ -23,6 +23,10 @@
 #include "vehicle_base.h"
 #endif 
 
+#if defined( _X360 )
+#include "xbox/xbox_win32stubs.h"
+#endif
+
 #ifdef CLIENT_DLL
 #include "materialsystem/materialsystem_config.h"
 #include "vgui_int.h"
@@ -1205,7 +1209,7 @@ void CBaseGameStats_Driver::ResetData()
 	m_bDidVoiceChat = false;
 	m_pGamestatsData = new CGamestatsData();
 	KeyValues *pKV = m_pGamestatsData->m_pKVData;
-	pKV->SetInt( "IsPc", true );
+	pKV->SetInt( "IsPc", IsPC() );
 	pKV->SetInt( "version", GAMESTATS_VERSION );
 	pKV->SetString( "srcid", s_szPseudoUniqueID );
 

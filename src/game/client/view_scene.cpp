@@ -27,6 +27,20 @@ ConVar r_depthoverlay( "r_depthoverlay", "0", FCVAR_CHEAT, "Replaces opaque obje
 int g_viewscene_refractUpdateFrame = 0;
 bool g_bAllowMultipleRefractUpdatesPerScenePerFrame = false;
 
+#if defined( _X360 )
+class CAllowMultipleRefractsLogic : public CAutoGameSystem
+{
+public:
+	void LevelInitPreEntity()
+	{
+		// EP1 core room needs many refract updates per frame to avoid looking broken (ep1_citadel_03)
+		// Same with Kleiner's lab (d1_trainstation_05)
+		g_bAllowMultipleRefractUpdatesPerScenePerFrame = FStrEq( MapName(), "ep1_citadel_03" ) || FStrEq( MapName(), "d1_trainstation_05" );
+	}
+};
+static CAllowMultipleRefractsLogic s_AllowMultipleRefractsLogic;
+#endif
+
 void ViewTransform( const Vector &worldSpace, Vector &viewSpace )
 {
 	const VMatrix &viewMatrix = engine->WorldToViewMatrix();
@@ -108,7 +122,14 @@ void UpdateFullScreenDepthTexture( void )
 	ITexture *pDepthTex = GetFullFrameDepthTexture();
 	CMatRenderContextPtr pRenderContext( materials );
 
-	pRenderContext->CopyRenderTargetToTextureEx( pDepthTex, 0, NULL, NULL );
+	if( IsX360() )
+	{	
+		pRenderContext->CopyRenderTargetToTextureEx( pDepthTex, -1, NULL, NULL );
+	}
+	else
+	{
+		pRenderContext->CopyRenderTargetToTextureEx( pDepthTex, 0, NULL, NULL );
+	}
 
 	pRenderContext->SetFullScreenDepthTextureValidityFlag( true );
 
@@ -118,9 +139,11 @@ void UpdateFullScreenDepthTexture( void )
 		pMaterial->IncrementReferenceCount();
 		IMaterialVar *BaseTextureVar = pMaterial->FindVar( "$basetexture", NULL, false );
 		IMaterialVar *pDepthInAlpha = NULL;
-	
-		pDepthInAlpha = pMaterial->FindVar( "$ALPHADEPTH", NULL, false );
-		pDepthInAlpha->SetIntValue( 1 );
+		if( IsPC() )
+		{
+			pDepthInAlpha = pMaterial->FindVar( "$ALPHADEPTH", NULL, false );
+			pDepthInAlpha->SetIntValue( 1 );
+		}
 		
 		BaseTextureVar->SetTextureValue( pDepthTex );
 

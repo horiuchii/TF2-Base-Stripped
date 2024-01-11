@@ -255,7 +255,12 @@ CTFTeamMenu::CTFTeamMenu( IViewPort *pViewPort ) : CTeamMenu( pViewPort )
 	m_pAutoTeamButton = new CTFTeamButton( this, "teambutton2" );
 	m_pSpecTeamButton = new CTFTeamButton( this, "teambutton3" );
 	m_pSpecLabel = new CTFLabel( this, "TeamMenuSpectate", "" );
+
+#ifdef _X360
+	m_pFooter = new CTFFooter( this, "Footer" );
+#else
 	m_pCancelButton = new CTFButton( this, "CancelButton", "#TF_Cancel" );
+#endif
 
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 
@@ -332,14 +337,29 @@ void CTFTeamMenu::ShowPanel( bool bShow )
 		switch ( C_TFPlayer::GetLocalTFPlayer()->GetTeamNumber() )
 		{
 		case TF_TEAM_BLUE:
+			if ( IsConsole() )
+			{
+				m_pBlueTeamButton->OnCursorEntered();
+				m_pBlueTeamButton->SetDefaultAnimation( "enter_enabled" );
+			}
 			GetFocusNavGroup().SetCurrentFocus( m_pBlueTeamButton->GetVPanel(), m_pBlueTeamButton->GetVPanel() );
 			break;
 
 		case TF_TEAM_RED:
+			if ( IsConsole() )
+			{
+				m_pRedTeamButton->OnCursorEntered();
+				m_pRedTeamButton->SetDefaultAnimation( "enter_enabled" );
+			}
 			GetFocusNavGroup().SetCurrentFocus( m_pRedTeamButton->GetVPanel(), m_pRedTeamButton->GetVPanel() );
 			break;
 
 		default:
+			if ( IsConsole() )
+			{
+				m_pAutoTeamButton->OnCursorEntered();
+				m_pAutoTeamButton->SetDefaultAnimation( "enter_enabled" );
+			}
 			GetFocusNavGroup().SetCurrentFocus( m_pAutoTeamButton->GetVPanel(), m_pAutoTeamButton->GetVPanel() );
 			break;
 		}
@@ -348,6 +368,16 @@ void CTFTeamMenu::ShowPanel( bool bShow )
 	{
 		SetVisible( false );
 		SetMouseInputEnabled( false );
+
+		if ( IsConsole() )
+		{
+			// Close the door behind us
+			CTFTeamButton *pButton = dynamic_cast< CTFTeamButton *> ( GetFocusNavGroup().GetCurrentFocus() );
+			if ( pButton )
+			{
+				pButton->OnCursorExited();
+			}
+		}
 	}
 }
 
@@ -362,19 +392,48 @@ void CTFTeamMenu::Update( void )
 
 	if ( pLocalPlayer && ( pLocalPlayer->GetTeamNumber() != TEAM_UNASSIGNED ) )
 	{
+#ifdef _X360
+		if ( m_pFooter )
+		{
+			m_pFooter->ShowButtonLabel( "cancel", true );
+		}
+#else
 		if ( m_pCancelButton )
 		{
 			m_pCancelButton->SetVisible( true );
 		}
+#endif
 	}
 	else
 	{
+#ifdef _X360
+		if ( m_pFooter )
+		{
+			m_pFooter->ShowButtonLabel( "cancel", false );
+		}
+#else
 		if ( m_pCancelButton && m_pCancelButton->IsVisible() )
 		{
 			m_pCancelButton->SetVisible( false );
 		}
+#endif
 	}
 }
+
+#ifdef _X360
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFTeamMenu::Join_Team( const CCommand &args )
+{
+	if ( args.ArgC() > 1 )
+	{
+		char cmd[256];
+		Q_snprintf( cmd, sizeof( cmd ), "jointeam_nomenus %s", args.Arg( 1 ) );
+		OnCommand( cmd );
+	}
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: chooses and loads the text page to display that describes mapName map

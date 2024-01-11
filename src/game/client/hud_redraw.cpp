@@ -92,7 +92,10 @@ void CHud::Think(void)
 
 	if ( ( m_flScreenShotTime > 0 ) && ( m_flScreenShotTime < gpGlobals->curtime ) )
 	{
-		engine->ClientCmd( "screenshot" );
+		if ( !IsX360() )
+		{
+			engine->ClientCmd( "screenshot" );
+		}
 
 		m_flScreenShotTime = -1;
 	}

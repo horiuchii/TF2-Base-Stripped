@@ -83,7 +83,7 @@ ConVar tf_birthday( "tf_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
 
 #ifdef GAME_DLL
 // TF overrides the default value of this convar
-ConVar mp_waitingforplayers_time( "mp_waitingforplayers_time", "30", FCVAR_GAMEDLL | FCVAR_DEVELOPMENTONLY, "WaitingForPlayers time length in seconds" );
+ConVar mp_waitingforplayers_time( "mp_waitingforplayers_time", (IsX360()?"15":"30"), FCVAR_GAMEDLL | FCVAR_DEVELOPMENTONLY, "WaitingForPlayers time length in seconds" );
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Allows living players to hear dead players using text/voice chat." );
 ConVar tf_spectalk( "tf_spectalk", "1", FCVAR_NOTIFY, "Allows living players to hear spectators using text chat." );
 #endif
@@ -2814,6 +2814,9 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsBirthday( void )
 {
+	if ( IsX360() )
+		return false;
+
 	if ( m_iBirthdayMode == BIRTHDAY_RECALCULATE )
 	{
 		m_iBirthdayMode = BIRTHDAY_OFF;
@@ -3345,6 +3348,15 @@ const char *CTFGameRules::GetVideoFileForMap( bool bWithExtension /*= true*/ )
 
 	Q_FileBase( engine->GetLevelName(), mapname, sizeof( mapname ) );
 	Q_strlower( mapname );
+
+#ifdef _X360
+	// need to remove the .360 extension on the end of the map name
+	char *pExt = Q_stristr( mapname, ".360" );
+	if ( pExt )
+	{
+		*pExt = '\0';
+	}
+#endif
 
 	static char strFullpath[MAX_PATH];
 	Q_strncpy( strFullpath, "media/", MAX_PATH );	// Assume we must play out of the media directory
