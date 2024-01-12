@@ -5945,7 +5945,7 @@ void CBaseEntity::SetLocalOrigin( const Vector& origin )
 		{
 			Warning( "Bad SetLocalOrigin(%f,%f,%f) on %s\n", origin.x, origin.y, origin.z, GetDebugName() );
 		}
-		Assert( false );
+		//Assert( false );
 		return;
 	}
 
